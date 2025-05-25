@@ -201,7 +201,7 @@ export default function HomePage() {
             {/* Icons Container - Responsive Width, Justification & Padding */}
             <div className="w-full md:w-2/5 flex items-center justify-center md:justify-start md:pl-12 space-x-8">
               {/* Slack Icon */}
-              <div className="bg-[radial-gradient(circle,_rgba(225,241,121,0.25)_0%,_rgba(225,241,121,0)_100%)] w-15 h-15 p-2 rounded-full flex items-center justify-center border-t-2 border-l-2 border-[#A3BC00]/40">
+              <div className="bg-[radial-gradient(circle,_rgba(225,241,121,0.25)_0%,_rgba(225,241,121,0)_100%)] w-10 h-10 p-1 md:w-16 md:h-16 md:p-2 rounded-full flex items-center justify-center border-t-2 border-l-2 border-[#A3BC00]/40">
                 <Image
                   src="/icons/slack.svg"
                   alt="Slack"
@@ -211,7 +211,7 @@ export default function HomePage() {
                 />
               </div>
               {/* SharePoint Icon */}
-              <div className="bg-[radial-gradient(circle,_rgba(225,241,121,0.25)_40%,_rgba(225,241,121,0)_100%)] w-15 h-15 p-2 rounded-full flex items-center justify-center border-t-2 border-l-2 border-[#A3BC00]/40">
+              <div className="bg-[radial-gradient(circle,_rgba(225,241,121,0.25)_40%,_rgba(225,241,121,0)_100%)] w-10 h-10 p-1 md:w-16 md:h-16 md:p-2 rounded-full flex items-center justify-center border-t-2 border-l-2 border-[#A3BC00]/40">
                 <Image
                   src="/icons/sharepoint.svg"
                   alt="SharePoint"
@@ -221,7 +221,7 @@ export default function HomePage() {
                 />
               </div>
               {/* PDF Icon */}
-              <div className="w-15 h-15 p-3 rounded-full flex items-center justify-center border-t-2 border-l-2 border-[#8C181A]/40">
+              <div className="w-10 h-10 p-1.5 md:w-16 md:h-16 md:p-3 rounded-full flex items-center justify-center border-t-2 border-l-2 border-[#8C181A]/40">
                 <Image
                   src="/icons/pdf.svg"
                   alt="PDF"

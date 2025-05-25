@@ -1,0 +1,7 @@
+{
+    "build": {
+      "env": {
+        "NODEJS_PACKAGE_MANAGER": "npm"
+      }
+    }
+  }

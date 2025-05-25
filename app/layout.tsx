@@ -6,11 +6,13 @@ import "./globals.css"
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   variable: "--font-instrument-sans",
+  weight: ["400", "600", "700"],
 })
 
 const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   variable: "--font-instrument-serif",
+  weight: "400",
 })
 
 export const metadata: Metadata = {

@@ -49,7 +49,7 @@ export default function AnimatedSearchDemo() {
     if (stage === "searching") {
       const timer = setTimeout(() => {
         setStage("results");
-      }, 5000);
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [stage, showCursor]);

@@ -5,7 +5,7 @@ import FocusModeDemo from "@/components/focus-mode-demo/FocusModeDemo";
 
 export default function FocusMode() {
   return (
-    <section className="md:py-6">
+    <section className="py-6">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div
           className="rounded-lg shadow-sm"
@@ -14,7 +14,7 @@ export default function FocusMode() {
           viewport={{ once: true, amount: 0.2 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="grid lg:grid-cols-5 gap-6 md:gap-20 items-center">
+          <div className="grid lg:grid-cols-5 md:gap-6 items-center">
             {/* Focus Mode Demo - Left side (3 columns) */}
             <motion.div
               className="mb-12 lg:col-span-3 order-2 lg:order-1"

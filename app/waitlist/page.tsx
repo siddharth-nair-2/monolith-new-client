@@ -171,7 +171,7 @@ export default function WaitlistPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FEFFFE] font-['Instrument_Sans']">
+    <div className="min-h-dvh bg-[#FEFFFE] font-['Instrument_Sans']">
       <Header />
 
       {/* Hero Section */}
@@ -523,11 +523,11 @@ export default function WaitlistPage() {
                       <CardFooter className="flex flex-col space-y-4">
                         <div className="px-6 mb-6 mt-2">
                           <Turnstile
+                            className="flex justify-center !w-[250px]"
                             siteKey={
                               process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""
                             }
                             onSuccess={(token) => {
-                              console.log("Turnstile success, token:", token);
                               setTurnstileToken(token);
                               setTurnstileError(null);
                             }}
@@ -539,7 +539,6 @@ export default function WaitlistPage() {
                               setTurnstileToken(null);
                             }}
                             onExpire={() => {
-                              console.warn("Turnstile token expired");
                               setTurnstileError(
                                 "Security check expired. Please complete it again."
                               );

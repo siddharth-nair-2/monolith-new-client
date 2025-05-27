@@ -27,7 +27,7 @@ export default function Footer() {
 
           {/* Right - Navigation Links */}
           <motion.div
-            className="md:col-span-2 grid md:grid-cols-2 gap-4 md:gap-16"
+            className="md:col-span-2 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}

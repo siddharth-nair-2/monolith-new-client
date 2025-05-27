@@ -53,7 +53,7 @@ export default function TermsOfServicePage() {
                   <li key={section.id}>
                     <a
                       href={`#${section.id}`}
-                      className="text-custom-dark-green hover:text-[#A3BC02] transition-colors text-sm"
+                      className="hover:text-[#A3BC02] text-custom-dark-green underline-offset-2 underline focus:text-custom-dark-green focus:underline transition-all duration-150 ease-in-out text-sm font-medium"
                     >
                       {section.label}
                     </a>

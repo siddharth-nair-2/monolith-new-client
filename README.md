@@ -1,6 +1,6 @@
 # Monolith Frontend
 
-This project is the frontend for the Monolith application, built with Next.js, TypeScript, and Tailwind CSS. It includes features like a waitlist form with Cloudflare Turnstile verification and a landing and waitlist page.
+This project is the frontend for the Monolith SaaS application, built with Next.js, TypeScript, and Tailwind CSS. It includes features like a waitlist form with Cloudflare Turnstile verification, a main landing page, and other user-facing interfaces.
 
 ## Getting Started
 
@@ -9,7 +9,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisites
 
 - Node.js (v18 or later recommended)
-- pnpm (or npm/yarn if you prefer, though `pnpm-lock.yaml` is present)
+- npm
 
 ### Installation
 
@@ -20,11 +20,6 @@ These instructions will get you a copy of the project up and running on your loc
     ```
 
 2.  **Install dependencies:**
-    If using pnpm:
-    ```bash
-    pnpm install
-    ```
-    Or npm:
     ```bash
     npm install
     ```
@@ -48,10 +43,6 @@ These instructions will get you a copy of the project up and running on your loc
 
 4.  **Run the development server:**
     ```bash
-    pnpm dev
-    ```
-    Or npm:
-    ```bash
     npm run dev
     ```
     Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -60,13 +51,13 @@ These instructions will get you a copy of the project up and running on your loc
 
 In the project directory, you can run:
 
--   `pnpm dev` or `npm run dev`:
+-   `npm run dev`:
     Runs the app in development mode.
--   `pnpm build` or `npm run build`:
+-   `npm run build`:
     Builds the app for production to the `.next` folder.
--   `pnpm start` or `npm run start`:
+-   `npm run start`:
     Starts the production server (requires a build first).
--   `pnpm lint` or `npm run lint`:
+-   `npm run lint`:
     Runs Next.js's built-in ESLint checks.
 
 ## Key Technologies Used
@@ -108,12 +99,6 @@ This project is configured for deployment on [Vercel](https://vercel.com/) (see 
 
 When deploying, ensure you set the required environment variables (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `FASTAPI_BASE_URL`) in your Vercel project settings.
 
-## Contributing
+---
 
-Contributions are welcome! Please open an issue or submit a pull request with your changes.
-
-(Add more specific contribution guidelines if needed)
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE.md file for details (if one exists, otherwise choose a license e.g., MIT).
+© 2025 Monolith Inc. All rights reserved.

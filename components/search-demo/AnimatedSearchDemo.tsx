@@ -64,7 +64,7 @@ export default function AnimatedSearchDemo() {
 
   return (
     <div
-      className="relative w-full h-[400px] md:h-[600px] overflow-hidden rounded-lg cursor-pointer"
+      className="relative w-full h-[600px] overflow-hidden rounded-lg cursor-pointer"
       onClick={resetAnimation}
     >
       <AnimatePresence mode="wait">

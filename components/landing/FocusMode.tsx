@@ -29,7 +29,7 @@ export default function FocusMode() {
             {/* Text Section - Right side (2 columns) */}
             <motion.div
               className="lg:col-span-2 pr-12 order-1 lg:order-2"
-              initial={{ opacity: 0, x: 50 }}
+              initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.6 }}

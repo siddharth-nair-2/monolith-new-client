@@ -13,8 +13,7 @@ const navItemVariant = {
 };
 
 const navHover = {
-  scale: 1.05,
-  color: "#A3BC00",
+  scale: 1.02,
   transition: { duration: 0.15 },
 };
 
@@ -30,9 +29,13 @@ export default function Header() {
   return (
     <header className="absolute top-0 left-0 right-0 z-50 px-8 py-6">
       <nav className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="text-4xl font-serif text-custom-dark-green font-semibold">
+        <motion.a
+          href="/"
+          className="text-4xl font-serif text-custom-dark-green font-semibold"
+          whileHover={navHover}
+        >
           Mono<span className="underline">l</span>ith
-        </div>
+        </motion.a>
 
         <div className="hidden md:flex items-center space-x-6 tracking-wide">
           <motion.a

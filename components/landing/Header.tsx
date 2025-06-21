@@ -92,8 +92,9 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-4 tracking-wide">
-          <motion.button
-            className="text-custom-dark-green text-md font-semibold"
+          <motion.a
+            href="/login"
+            className="text-custom-dark-green text-md font-semibold hover:text-gray-900"
             custom={0.4}
             initial="hidden"
             animate="visible"
@@ -101,9 +102,10 @@ export default function Header() {
             whileHover={navHover}
           >
             Login
-          </motion.button>
-          <motion.button
-            className="button-gradient text-custom-dark-green text-sm font-semibold px-4 py-2 rounded-sm"
+          </motion.a>
+          <motion.a
+            href="/signup"
+            className="button-gradient text-custom-dark-green text-sm font-semibold px-4 py-2 rounded-sm hover:shadow-md"
             custom={0.5}
             initial="hidden"
             animate="visible"
@@ -111,7 +113,7 @@ export default function Header() {
             whileHover={buttonHover}
           >
             Sign Up
-          </motion.button>
+          </motion.a>
         </div>
       </nav>
     </header>

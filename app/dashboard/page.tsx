@@ -153,7 +153,7 @@ function DashboardHeader() {
   const showBorder = isMobile ? !openMobile : state === "collapsed";
 
   return (
-    <header className={`px-6 py-4 ${showBorder ? "border-l-8 border-l-[#8ECC3A]" : ""}`}>
+    <header className={`px-4 py-4 ${showBorder ? "border-l-8 border-l-[#8ECC3A]" : ""}`}>
       <SidebarTrigger />
     </header>
   );

@@ -22,7 +22,6 @@ const publicApiRoutes = [
   '/api/auth/check-domain',
   '/api/auth/forgot-password',
   '/api/invites/validate',
-  '/api/invites/decline',
   '/api/waitlist',
 ];
 

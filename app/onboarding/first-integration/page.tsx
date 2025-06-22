@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -55,6 +55,19 @@ export default function FirstIntegrationPage() {
   const router = useRouter();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [companyName, setCompanyName] = useState<string>("");
+
+  useEffect(() => {
+    // Fetch user profile to get company name
+    fetch("/api/users/profile")
+      .then((res) => res.json())
+      .then((profile) => {
+        if (profile.tenant?.name) {
+          setCompanyName(profile.tenant.name);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch profile:", err));
+  }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles: UploadedFile[] = acceptedFiles.map((file) => ({
@@ -257,7 +270,17 @@ export default function FirstIntegrationPage() {
                   ith
                 </Link>
               </div>
-              <Badge variant="outline">First Integration</Badge>
+              <div className="flex items-center gap-3">
+                {companyName && (
+                  <>
+                    <Badge variant="secondary" className="font-medium">
+                      {companyName}
+                    </Badge>
+                    <div className="h-4 w-px bg-gray-200" />
+                  </>
+                )}
+                <Badge variant="outline">First Integration</Badge>
+              </div>
             </div>
           </div>
         </motion.div>

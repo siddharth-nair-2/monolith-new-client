@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -30,7 +30,9 @@ export default function InviteTeamPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [emailList, setEmailList] = useState<string[]>([])
   const [emailInput, setEmailInput] = useState('')
-  const [inviteQuota] = useState({ used: 3, limit: 10 }) // Mock quota
+  const [error, setError] = useState<string | null>(null)
+  const [isCheckingRole, setIsCheckingRole] = useState(true)
+  const [companyName, setCompanyName] = useState<string>('')
 
   const {
     register,
@@ -45,6 +47,35 @@ export default function InviteTeamPage() {
       role: 'member'
     }
   })
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('/api/users/profile')
+        if (response.ok) {
+          const profile = await response.json()
+          if (profile.role !== 'admin') {
+            // Non-admin users should not access this page
+            router.push('/onboarding')
+          } else {
+            // Store company name for display
+            setCompanyName(profile.tenant?.name || '')
+          }
+        } else {
+          // If profile fetch fails, redirect to onboarding
+          router.push('/onboarding')
+        }
+      } catch (error) {
+        console.error('Failed to check user role:', error)
+        router.push('/onboarding')
+      } finally {
+        setIsCheckingRole(false)
+      }
+    }
+
+    checkUserRole()
+  }, [router])
 
   const addEmail = () => {
     if (emailInput.trim() && !emailList.includes(emailInput.trim())) {
@@ -74,10 +105,13 @@ export default function InviteTeamPage() {
 
   const onSubmit = async (data: TeamInviteFormData) => {
     if (emailList.length === 0) {
+      setError('Please add at least one email address')
       return
     }
 
     setIsLoading(true)
+    setError(null)
+    
     try {
       // Send invites via API
       const inviteResponse = await fetch('/api/invites/send', {
@@ -90,13 +124,18 @@ export default function InviteTeamPage() {
         }),
       })
 
-      if (!inviteResponse.ok) {
-        const errorData = await inviteResponse.json()
-        throw new Error(errorData.message || 'Failed to send invites')
-      }
-
       const inviteResult = await inviteResponse.json()
-      console.log('Invites sent:', inviteResult)
+
+      if (!inviteResponse.ok) {
+        // Handle specific error cases
+        if (inviteResponse.status === 429) {
+          throw new Error('Invite quota exceeded. Please try again later.')
+        } else if (inviteResponse.status === 403) {
+          throw new Error('You do not have permission to send invites.')
+        } else {
+          throw new Error(inviteResult.message || inviteResult.error || 'Failed to send invites')
+        }
+      }
 
       // Mark invite_team step as completed
       const completeResponse = await fetch('/api/onboarding/complete-step', {
@@ -115,31 +154,62 @@ export default function InviteTeamPage() {
         console.warn('Failed to mark step as completed')
       }
 
-      // Redirect back to onboarding dashboard
-      router.push('/onboarding')
+      // Handle partial failures
+      if (inviteResult.failed && inviteResult.failed.length > 0) {
+        const failedEmails = inviteResult.failed.map((f: any) => Object.keys(f)[0]).join(', ')
+        setError(`Some invites failed: ${failedEmails}`)
+        // Still proceed if some succeeded
+        if (inviteResult.invited > 0) {
+          setTimeout(() => router.push('/onboarding'), 2000)
+        }
+      } else {
+        // All invites sent successfully
+        router.push('/onboarding')
+      }
     } catch (error) {
       console.error('Error sending invites:', error)
-      // Show error to user (you could add error state here)
+      setError(error instanceof Error ? error.message : 'Failed to send invites')
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleSkip = async () => {
+    setError(null)
+    setIsLoading(true)
+    
     try {
       // Mark step as skipped
-      await fetch('/api/onboarding/skip-step', {
+      const response = await fetch('/api/onboarding/skip-step', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           step: 'invite_team',
         }),
       })
+      
+      if (!response.ok) {
+        console.warn('Failed to mark step as skipped')
+      }
     } catch (error) {
-      console.warn('Failed to mark step as skipped')
+      console.warn('Failed to mark step as skipped:', error)
+    } finally {
+      setIsLoading(false)
     }
     
     router.push('/onboarding')
+  }
+
+  // Show loading state while checking role
+  if (isCheckingRole) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white via-[#fafbf9] to-[#f0f7e8] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[#A3BC02] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Checking permissions...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -170,7 +240,17 @@ export default function InviteTeamPage() {
                   Mono<span className="underline decoration-[#A3BC02] decoration-2 underline-offset-2">l</span>ith
                 </Link>
               </div>
-              <Badge variant="outline">Invite Team</Badge>
+              <div className="flex items-center gap-3">
+                {companyName && (
+                  <>
+                    <Badge variant="secondary" className="font-medium">
+                      {companyName}
+                    </Badge>
+                    <div className="h-4 w-px bg-gray-200" />
+                  </>
+                )}
+                <Badge variant="outline">Invite Team</Badge>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -190,21 +270,20 @@ export default function InviteTeamPage() {
                 </div>
                 <CardTitle className="text-3xl font-serif text-[#3E4128]">Invite Your Team</CardTitle>
                 <CardDescription className="text-lg">
-                  Get your team started by sending them invitations to join your workspace.
+                  Get your team started by sending them invitations to join {companyName ? `${companyName}'s` : 'your'} workspace.
                 </CardDescription>
               </CardHeader>
 
               <CardContent>
-                {/* Quota Display */}
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-900">Invite Quota</span>
+                {/* Error Display */}
+                {error && (
+                  <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600" />
+                      <p className="text-sm text-red-700">{error}</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-blue-700">
-                    {inviteQuota.used} of {inviteQuota.limit} invites used this hour
-                  </p>
-                </div>
+                )}
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   {/* Email Input */}

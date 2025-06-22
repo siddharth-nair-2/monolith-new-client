@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { backendApiRequest } from "@/lib/api-client";
 
 export async function GET(request: Request) {
   try {
@@ -12,21 +13,13 @@ export async function GET(request: Request) {
       );
     }
 
-    const fastapiBaseUrl = process.env.FASTAPI_BASE_URL;
-    if (!fastapiBaseUrl) {
-      console.error("FASTAPI_BASE_URL environment variable is not set.");
-      return NextResponse.json(
-        { error: "Internal server configuration error." },
-        { status: 500 }
-      );
-    }
-
-    const apiUrl = `${fastapiBaseUrl}/api/v1/invites/validate?token=${encodeURIComponent(token)}`;
-
-    const backendResponse = await fetch(apiUrl, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
+    const backendResponse = await backendApiRequest(
+      `/api/v1/invites/validate?token=${encodeURIComponent(token)}`,
+      {
+        method: "GET",
+        skipAuth: true, // This is a public endpoint
+      }
+    );
 
     const backendData = await backendResponse.json();
 

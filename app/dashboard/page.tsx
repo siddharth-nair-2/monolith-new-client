@@ -19,6 +19,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Search,
@@ -62,7 +63,7 @@ const mockRecentSearches = [
 
 function AppSidebar() {
   return (
-    <Sidebar className="!bg-[#f8f9f5] border-r border-gray-200 shadow-[inset_0_0_35px_rgba(163,188,4,0.25)]">
+    <Sidebar className="!bg-[#f8f9f5] border-r border-gray-200 border-l-8 border-l-[#8ECC3A] shadow-[inset_0_0_35px_rgba(163,188,4,0.25)]">
       <SidebarHeader className="p-4">
         {/* Logo */}
         <div className="w-8 h-8 bg-[#A3BC02] rounded-lg flex items-center justify-center">
@@ -147,9 +148,13 @@ function AppSidebar() {
 }
 
 function DashboardHeader() {
+  const { state, isMobile, openMobile } = useSidebar();
+
+  const showBorder = isMobile ? !openMobile : state === "collapsed";
+
   return (
-    <header className="px-6 py-4">
-      <SidebarTrigger className="text-[#3E4128]" />
+    <header className={`px-6 py-4 ${showBorder ? "border-l-8 border-l-[#8ECC3A]" : ""}`}>
+      <SidebarTrigger />
     </header>
   );
 }

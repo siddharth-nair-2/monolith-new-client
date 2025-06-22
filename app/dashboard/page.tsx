@@ -62,7 +62,7 @@ const mockRecentSearches = [
 
 function AppSidebar() {
   return (
-    <Sidebar className="bg-[#f8f9f5] border-r border-gray-200 shadow-[inset_0_0_35px_rgba(163,188,4,0.25)]">
+    <Sidebar className="!bg-[#f8f9f5] border-r border-gray-200 shadow-[inset_0_0_35px_rgba(163,188,4,0.25)]">
       <SidebarHeader className="p-4">
         {/* Logo */}
         <div className="w-8 h-8 bg-[#A3BC02] rounded-lg flex items-center justify-center">

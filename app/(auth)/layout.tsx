@@ -26,7 +26,7 @@ export default function AuthenticatedLayout({
           {children}
 
           {/* Bottom Right Status Menu */}
-          <div className="absolute bottom-6 right-6 flex items-center gap-3">
+          <div className="fixed bottom-6 right-6 flex items-center gap-3 z-50">
             <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-full px-4 py-2 shadow-lg">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-[#A3BC02] rounded-full"></div>

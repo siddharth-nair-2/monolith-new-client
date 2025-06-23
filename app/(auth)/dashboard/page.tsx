@@ -1,14 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  Paperclip,
-  Clock,
-} from "lucide-react";
+import { Search, Paperclip, Clock, ArrowRight, FileText } from "lucide-react";
 
 // Mock data
 const mockRecentSearches = [
@@ -21,6 +17,69 @@ const mockRecentSearches = [
 function SearchSection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [instantResults, setInstantResults] = useState<
+    Array<Record<string, any>>
+  >([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Debounced instant search function
+  const performInstantSearch = useCallback(async (query: string) => {
+    if (query.length < 3) {
+      setInstantResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch("/api/search/full", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: query,
+          limit: 5,
+          include_summary: false,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setInstantResults(data.results || []);
+      } else if (response.status === 401) {
+        // Handle authentication error
+        console.warn("Authentication failed for search");
+        setInstantResults([]);
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Search failed:", errorData.error || "Unknown error");
+        setInstantResults([]);
+      }
+    } catch (error) {
+      console.error("Instant search failed:", error);
+      setInstantResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Debounce the instant search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      performInstantSearch(searchQuery.trim());
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, performInstantSearch]);
+
+  const handleSubmit = () => {
+    const query = searchQuery.trim();
+    if (query) {
+      console.log("Searching for:", query);
+      // Handle search submission here
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
@@ -57,11 +116,82 @@ function SearchSection() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              className="text-custom-dark-green pl-12 pr-4 py-4 text-lg rounded-3xl bg-[#F0F0F0] focus:border-[#A3BC02] focus:ring-[#A3BC02]"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && searchQuery.trim()) {
+                  handleSubmit();
+                }
+              }}
+              className={`text-custom-dark-green pl-12 py-4 text-lg rounded-3xl bg-[#F0F0F0] focus:bg-white border-0 outline-none focus:border-0 focus:outline-none focus:ring-0 focus:shadow-[inset_0_0_15px_rgba(163,188,1,0.2),0_4px_4px_0_rgba(163,188,1,1)] transition-shadow duration-200 ${
+                searchQuery.trim() ? "pr-12" : "pr-4"
+              }`}
             />
-            
-            {/* Search Suggestions */}
-            {showSuggestions && (
+
+            {/* Submit Button - only shows when there's text */}
+            {searchQuery.trim() && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.15 }}
+                onClick={handleSubmit}
+                className="absolute right-3 top-2 w-6 h-6  hover:bg-[#A3BC02] hover:text-white border border-[#A3BC02] shadow-[inset_0_0_15px_rgba(163,188,1,0.2)] text-custom-dark-green rounded-full flex items-center justify-center transition-colors duration-200"
+              >
+                <ArrowRight className="w-4 h-4 " />
+              </motion.button>
+            )}
+
+            {/* Instant Search Suggestions */}
+            {showSuggestions && searchQuery.length >= 3 && (
+              <motion.div
+                className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="p-3">
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                    {isSearching
+                      ? "Searching..."
+                      : `Suggested searches (${instantResults.length} results)`}
+                  </div>
+                  {isSearching ? (
+                    <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                      <div className="animate-pulse">Searching...</div>
+                    </div>
+                  ) : instantResults.length > 0 ? (
+                    instantResults.map((result, index) => (
+                      <button
+                        key={index}
+                        className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg flex items-center gap-2"
+                        onClick={() => {
+                          setSearchQuery(
+                            result.title ||
+                              result.filename ||
+                              result.content?.substring(0, 50) ||
+                              "Document"
+                          );
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        <FileText className="w-3 h-3 text-gray-400" />
+                        <div className="truncate">
+                          {result.title ||
+                            result.filename ||
+                            result.content?.substring(0, 50) ||
+                            "Document"}
+                        </div>
+                      </button>
+                    ))
+                  ) : searchQuery.length >= 3 && !isSearching ? (
+                    <div className="px-3 py-4 text-sm text-gray-500 text-center">
+                      No results found for "{searchQuery}"
+                    </div>
+                  ) : null}
+                </div>
+              </motion.div>
+            )}
+            {/* Recent Searches (fallback when no query) */}
+            {showSuggestions && searchQuery.length < 3 && (
               <motion.div
                 className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
                 initial={{ opacity: 0, y: -10 }}

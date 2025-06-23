@@ -160,6 +160,78 @@
                 }
             }
         },
+        "/api/v1/auth/refresh": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh Access Token",
+                "description": "Refresh access token using refresh token",
+                "operationId": "refresh_token_api_v1_auth_refresh_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RefreshTokenRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RefreshTokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/auth/logout": {
             "post": {
                 "tags": [
@@ -2403,7 +2475,7 @@
                     "Documents Management"
                 ],
                 "summary": "List Documents",
-                "description": "Get paginated list of documents with filtering and sorting options",
+                "description": "Get paginated list of documents with advanced filtering and sorting options",
                 "operationId": "list_documents_api_v1_documents_get",
                 "security": [
                     {
@@ -2451,13 +2523,34 @@
                                     "type": "null"
                                 }
                             ],
-                            "description": "Filter by source type",
+                            "description": "Filter by source type (single value, deprecated - use source_types)",
                             "title": "Source Type"
                         },
-                        "description": "Filter by source type"
+                        "description": "Filter by source type (single value, deprecated - use source_types)"
                     },
                     {
-                        "name": "status",
+                        "name": "source_types",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by source types (multiple allowed)",
+                            "title": "Source Types"
+                        },
+                        "description": "Filter by source types (multiple allowed)"
+                    },
+                    {
+                        "name": "processing_status",
                         "in": "query",
                         "required": false,
                         "schema": {
@@ -2469,10 +2562,31 @@
                                     "type": "null"
                                 }
                             ],
-                            "description": "Filter by processing status",
-                            "title": "Status"
+                            "description": "Filter by processing status (single value, deprecated - use processing_statuses)",
+                            "title": "Processing Status"
                         },
-                        "description": "Filter by processing status"
+                        "description": "Filter by processing status (single value, deprecated - use processing_statuses)"
+                    },
+                    {
+                        "name": "processing_statuses",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by processing statuses (multiple allowed)",
+                            "title": "Processing Statuses"
+                        },
+                        "description": "Filter by processing statuses (multiple allowed)"
                     },
                     {
                         "name": "search",
@@ -2493,12 +2607,353 @@
                         "description": "Search in document names"
                     },
                     {
+                        "name": "exclude_failed",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "description": "Exclude documents with FAILED status (default: true)",
+                            "default": true,
+                            "title": "Exclude Failed"
+                        },
+                        "description": "Exclude documents with FAILED status (default: true)"
+                    },
+                    {
+                        "name": "created_after",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter documents created after this date",
+                            "title": "Created After"
+                        },
+                        "description": "Filter documents created after this date"
+                    },
+                    {
+                        "name": "created_before",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter documents created before this date",
+                            "title": "Created Before"
+                        },
+                        "description": "Filter documents created before this date"
+                    },
+                    {
+                        "name": "updated_after",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter documents updated after this date",
+                            "title": "Updated After"
+                        },
+                        "description": "Filter documents updated after this date"
+                    },
+                    {
+                        "name": "updated_before",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter documents updated before this date",
+                            "title": "Updated Before"
+                        },
+                        "description": "Filter documents updated before this date"
+                    },
+                    {
+                        "name": "file_created_after",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by file creation date (after)",
+                            "title": "File Created After"
+                        },
+                        "description": "Filter by file creation date (after)"
+                    },
+                    {
+                        "name": "file_created_before",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "format": "date-time"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by file creation date (before)",
+                            "title": "File Created Before"
+                        },
+                        "description": "Filter by file creation date (before)"
+                    },
+                    {
+                        "name": "extensions",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by file extensions (e.g., pdf, docx)",
+                            "title": "Extensions"
+                        },
+                        "description": "Filter by file extensions (e.g., pdf, docx)"
+                    },
+                    {
+                        "name": "mime_types",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by MIME types",
+                            "title": "Mime Types"
+                        },
+                        "description": "Filter by MIME types"
+                    },
+                    {
+                        "name": "min_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Minimum file size in bytes",
+                            "title": "Min Size"
+                        },
+                        "description": "Minimum file size in bytes"
+                    },
+                    {
+                        "name": "max_size",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "integer",
+                                    "minimum": 0
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Maximum file size in bytes",
+                            "title": "Max Size"
+                        },
+                        "description": "Maximum file size in bytes"
+                    },
+                    {
+                        "name": "author",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by document author",
+                            "title": "Author"
+                        },
+                        "description": "Filter by document author"
+                    },
+                    {
+                        "name": "keywords",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by keywords (must contain all)",
+                            "title": "Keywords"
+                        },
+                        "description": "Filter by keywords (must contain all)"
+                    },
+                    {
+                        "name": "uploaded_by",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by uploader user ID",
+                            "title": "Uploaded By"
+                        },
+                        "description": "Filter by uploader user ID"
+                    },
+                    {
+                        "name": "category_ids",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by category IDs",
+                            "title": "Category Ids"
+                        },
+                        "description": "Filter by category IDs"
+                    },
+                    {
+                        "name": "topic_ids",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter by topic IDs",
+                            "title": "Topic Ids"
+                        },
+                        "description": "Filter by topic IDs"
+                    },
+                    {
+                        "name": "has_chunks",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter documents with/without chunks",
+                            "title": "Has Chunks"
+                        },
+                        "description": "Filter documents with/without chunks"
+                    },
+                    {
+                        "name": "has_errors",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ],
+                            "description": "Filter documents with/without errors",
+                            "title": "Has Errors"
+                        },
+                        "description": "Filter documents with/without errors"
+                    },
+                    {
                         "name": "sort_by",
                         "in": "query",
                         "required": false,
                         "schema": {
                             "type": "string",
-                            "pattern": "^(created_at|updated_at|name|file_size_bytes)$",
+                            "pattern": "^(created_at|updated_at|name|file_size_bytes|file_created_at|file_modified_at)$",
                             "description": "Sort field",
                             "default": "created_at",
                             "title": "Sort By"
@@ -2824,13 +3279,62 @@
                 ]
             }
         },
+        "/api/v1/documents/filter-options": {
+            "get": {
+                "tags": [
+                    "Documents Management"
+                ],
+                "summary": "Get Document Filter Options",
+                "description": "Get available options for document filters including extensions, mime types, authors, categories, and topics",
+                "operationId": "get_document_filter_options_api_v1_documents_filter_options_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "additionalProperties": true,
+                                    "type": "object",
+                                    "title": "Response Get Document Filter Options Api V1 Documents Filter Options Get"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Authentication Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthenticationErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/InternalServerErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "HTTPBearer": []
+                    }
+                ]
+            }
+        },
         "/api/v1/documents/{document_id}/download": {
             "get": {
                 "tags": [
                     "Documents Management"
                 ],
-                "summary": "Download Document",
-                "description": "Download the original document file as a streaming response",
+                "summary": "Download/View Document",
+                "description": "Download or view the original document file as a streaming response",
                 "operationId": "download_document_api_v1_documents__document_id__download_get",
                 "security": [
                     {
@@ -2846,6 +3350,18 @@
                             "type": "string",
                             "title": "Document Id"
                         }
+                    },
+                    {
+                        "name": "view",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "description": "Display inline in browser instead of downloading",
+                            "default": false,
+                            "title": "View"
+                        },
+                        "description": "Display inline in browser instead of downloading"
                     }
                 ],
                 "responses": {
@@ -6464,9 +6980,13 @@
                     "user": {
                         "$ref": "#/components/schemas/UserResponse"
                     },
-                    "token": {
+                    "access_token": {
                         "type": "string",
-                        "title": "Token"
+                        "title": "Access Token"
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "title": "Refresh Token"
                     },
                     "expires_at": {
                         "type": "string",
@@ -6489,7 +7009,8 @@
                 "type": "object",
                 "required": [
                     "user",
-                    "token",
+                    "access_token",
+                    "refresh_token",
                     "expires_at"
                 ],
                 "title": "AuthResponse"
@@ -7636,6 +8157,28 @@
                             }
                         ],
                         "title": "Content Hash"
+                    },
+                    "view_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "View Url"
+                    },
+                    "download_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Download Url"
                     }
                 },
                 "type": "object",
@@ -7769,6 +8312,17 @@
                         "type": "boolean",
                         "title": "Has Permission",
                         "default": true
+                    },
+                    "view_url": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "View Url"
                     }
                 },
                 "type": "object",
@@ -7862,6 +8416,21 @@
                             }
                         ],
                         "title": "Filters"
+                    },
+                    "relevance_threshold": {
+                        "anyOf": [
+                            {
+                                "type": "number",
+                                "maximum": 1.0,
+                                "minimum": 0.0
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Relevance Threshold",
+                        "description": "Minimum combined score threshold (0.0-1.0)",
+                        "default": 0.1
                     }
                 },
                 "type": "object",
@@ -8962,6 +9531,43 @@
                 ],
                 "title": "RateLimitErrorResponse",
                 "description": "Response model for rate limit errors (429)."
+            },
+            "RefreshTokenRequest": {
+                "properties": {
+                    "refresh_token": {
+                        "type": "string",
+                        "title": "Refresh Token"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "refresh_token"
+                ],
+                "title": "RefreshTokenRequest"
+            },
+            "RefreshTokenResponse": {
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "title": "Access Token"
+                    },
+                    "refresh_token": {
+                        "type": "string",
+                        "title": "Refresh Token"
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Expires At"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "access_token",
+                    "refresh_token",
+                    "expires_at"
+                ],
+                "title": "RefreshTokenResponse"
             },
             "ResetPasswordRequest": {
                 "properties": {

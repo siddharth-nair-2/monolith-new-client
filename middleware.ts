@@ -77,17 +77,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
   
-  // For API requests, add refresh token header if available
-  if (pathname.startsWith('/api/') && !isPublicApiRoute && refreshToken) {
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('X-Refresh-Token', refreshToken.value);
-    
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-  }
   
   return NextResponse.next();
 }

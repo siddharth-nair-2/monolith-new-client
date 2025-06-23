@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,275 +53,31 @@ import {
 import { format, formatDistanceToNowStrict } from "date-fns";
 import type { DateRange } from "react-day-picker";
 
-// Enhanced document interface
+// Document interface based on API response
 interface Document {
   id: string;
   name: string;
   source_type: string;
-  processing_status: string;
-  file_size_bytes: number;
-  file_extension: string;
-  mime_type: string;
-  author?: string;
-  uploaded_by: string;
+  status: string;
   created_at: string;
   updated_at: string;
-  file_created_at: string;
-  file_modified_at: string;
-  keywords: string[];
-  category_ids: string[];
-  topic_ids: string[];
-  has_chunks: boolean;
-  has_errors: boolean;
-  thumbnail_url?: string;
-  is_suggested?: boolean;
-  is_recent?: boolean;
-  view_count?: number;
-  last_accessed?: string;
+  file_size_bytes?: number | null;
+  extension?: string | null;
+  processing_status: string;
+  uploaded_by?: string | null;
+  chunk_count?: number | null;
+  has_permission?: boolean;
+  view_url?: string | null;
 }
 
-// Enhanced mock data with more realistic content
-const mockDocuments: Document[] = [
-  {
-    id: "1",
-    name: "Q4 Budget Planning & Financial Projections.xlsx",
-    source_type: "upload",
-    processing_status: "COMPLETED",
-    file_size_bytes: 2048576,
-    file_extension: "xlsx",
-    mime_type:
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    author: "Sarah Chen",
-    uploaded_by: "sarah.chen@company.com",
-    created_at: "2024-06-15T10:30:00Z",
-    updated_at: "2024-06-15T10:35:00Z",
-    file_created_at: "2024-06-14T15:20:00Z",
-    file_modified_at: "2024-06-14T16:45:00Z",
-    keywords: ["budget", "planning", "finance", "Q4"],
-    category_ids: ["cat-1"],
-    topic_ids: ["topic-1"],
-    has_chunks: true,
-    has_errors: false,
-    is_suggested: true,
-    view_count: 24,
-    last_accessed: "2024-06-20T09:15:00Z",
-  },
-  {
-    id: "2",
-    name: "Employee Handbook 2024 - Complete Guide.pdf",
-    source_type: "sharepoint",
-    processing_status: "COMPLETED",
-    file_size_bytes: 5242880,
-    file_extension: "pdf",
-    mime_type: "application/pdf",
-    author: "HR Department",
-    uploaded_by: "hr@company.com",
-    created_at: "2024-05-16T09:15:00Z",
-    updated_at: "2024-05-16T09:20:00Z",
-    file_created_at: "2024-05-10T11:00:00Z",
-    file_modified_at: "2024-05-12T14:30:00Z",
-    keywords: ["hr", "handbook", "policies", "employee"],
-    category_ids: ["cat-2"],
-    topic_ids: ["topic-2"],
-    has_chunks: true,
-    has_errors: false,
-    is_recent: true,
-    view_count: 156,
-    last_accessed: "2024-06-19T14:22:00Z",
-  },
-  {
-    id: "3",
-    name: "Marketing Campaign Analysis - Q1 Results.docx",
-    source_type: "googledrive",
-    processing_status: "EMBEDDING",
-    file_size_bytes: 1048576,
-    file_extension: "docx",
-    mime_type:
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    author: "Marketing Team",
-    uploaded_by: "marketing@company.com",
-    created_at: "2024-04-17T14:22:00Z",
-    updated_at: "2024-04-17T14:25:00Z",
-    file_created_at: "2024-04-16T10:15:00Z",
-    file_modified_at: "2024-04-16T16:20:00Z",
-    keywords: ["marketing", "campaign", "analysis", "Q1"],
-    category_ids: ["cat-3"],
-    topic_ids: ["topic-3"],
-    has_chunks: false,
-    has_errors: false,
-    view_count: 8,
-    last_accessed: "2024-06-18T11:30:00Z",
-  },
-  {
-    id: "4",
-    name: "Product Launch Strategy - Innovation Series.pptx",
-    source_type: "onedrive",
-    processing_status: "COMPLETED",
-    file_size_bytes: 8388608,
-    file_extension: "pptx",
-    mime_type:
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    author: "Product Team",
-    uploaded_by: "product@company.com",
-    created_at: "2024-03-18T16:45:00Z",
-    updated_at: "2024-03-18T16:50:00Z",
-    file_created_at: "2024-03-17T13:20:00Z",
-    file_modified_at: "2024-03-17T15:30:00Z",
-    keywords: ["product", "launch", "strategy", "innovation"],
-    category_ids: ["cat-4"],
-    topic_ids: ["topic-4"],
-    has_chunks: true,
-    has_errors: false,
-    is_suggested: true,
-    view_count: 42,
-    last_accessed: "2024-06-20T08:45:00Z",
-  },
-  {
-    id: "5",
-    name: "Technical Architecture Documentation.pdf",
-    source_type: "confluence",
-    processing_status: "FAILED_PARSING",
-    file_size_bytes: 3145728,
-    file_extension: "pdf",
-    mime_type: "application/pdf",
-    author: "Engineering Team",
-    uploaded_by: "engineering@company.com",
-    created_at: "2024-02-19T11:30:00Z",
-    updated_at: "2024-02-19T11:35:00Z",
-    file_created_at: "2024-02-18T09:15:00Z",
-    file_modified_at: "2024-02-18T14:20:00Z",
-    keywords: ["technical", "architecture", "documentation", "engineering"],
-    category_ids: ["cat-5"],
-    topic_ids: ["topic-5"],
-    has_chunks: false,
-    has_errors: true,
-    view_count: 12,
-    last_accessed: "2024-06-19T16:10:00Z",
-  },
-  // Add 5 more documents for better testing
-  {
-    id: "6",
-    name: "Sales Report Q2 2024.xlsx",
-    source_type: "upload",
-    processing_status: "COMPLETED",
-    file_size_bytes: 1572864,
-    file_extension: "xlsx",
-    mime_type:
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    author: "Sales Team",
-    uploaded_by: "sales@company.com",
-    created_at: "2024-07-01T10:00:00Z",
-    updated_at: "2024-07-01T10:05:00Z",
-    file_created_at: "2024-06-30T14:00:00Z",
-    file_modified_at: "2024-06-30T15:00:00Z",
-    keywords: ["sales", "report", "Q2", "finance"],
-    category_ids: ["cat-1"],
-    topic_ids: ["topic-1", "topic-6"],
-    has_chunks: true,
-    has_errors: false,
-    is_recent: true,
-    view_count: 78,
-    last_accessed: "2024-07-02T11:00:00Z",
-  },
-  {
-    id: "7",
-    name: "New Website Design Mockups.png",
-    source_type: "googledrive",
-    processing_status: "COMPLETED",
-    file_size_bytes: 3145728,
-    file_extension: "png",
-    mime_type: "image/png",
-    author: "Design Team",
-    uploaded_by: "design@company.com",
-    created_at: "2024-06-25T15:30:00Z",
-    updated_at: "2024-06-25T15:35:00Z",
-    file_created_at: "2024-06-24T10:00:00Z",
-    file_modified_at: "2024-06-24T12:00:00Z",
-    keywords: ["website", "design", "mockups", "ui", "ux"],
-    category_ids: ["cat-3"],
-    topic_ids: ["topic-7"],
-    has_chunks: true,
-    has_errors: false,
-    is_suggested: true,
-    view_count: 33,
-    last_accessed: "2024-06-28T10:00:00Z",
-  },
-  {
-    id: "8",
-    name: "Client Onboarding Checklist.docx",
-    source_type: "sharepoint",
-    processing_status: "PENDING",
-    file_size_bytes: 512000,
-    file_extension: "docx",
-    mime_type:
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    author: "Customer Success",
-    uploaded_by: "cs@company.com",
-    created_at: "2024-06-10T12:00:00Z",
-    updated_at: "2024-06-10T12:05:00Z",
-    file_created_at: "2024-06-09T09:00:00Z",
-    file_modified_at: "2024-06-09T10:00:00Z",
-    keywords: ["client", "onboarding", "checklist", "customer success"],
-    category_ids: ["cat-2"],
-    topic_ids: ["topic-8"],
-    has_chunks: false,
-    has_errors: false,
-    view_count: 5,
-    last_accessed: "2024-06-12T14:00:00Z",
-  },
-  {
-    id: "9",
-    name: "Competitor Analysis Report.pdf",
-    source_type: "upload",
-    processing_status: "INDEXING",
-    file_size_bytes: 2097152,
-    file_extension: "pdf",
-    mime_type: "application/pdf",
-    author: "Strategy Team",
-    uploaded_by: "strategy@company.com",
-    created_at: "2024-05-20T14:00:00Z",
-    updated_at: "2024-05-20T14:05:00Z",
-    file_created_at: "2024-05-19T11:00:00Z",
-    file_modified_at: "2024-05-19T13:00:00Z",
-    keywords: [
-      "competitor",
-      "analysis",
-      "report",
-      "strategy",
-      "market research",
-    ],
-    category_ids: ["cat-4"],
-    topic_ids: ["topic-9"],
-    has_chunks: true,
-    has_errors: false,
-    view_count: 21,
-    last_accessed: "2024-06-01T16:00:00Z",
-  },
-  {
-    id: "10",
-    name: "Annual Company Retreat Itinerary.pptx",
-    source_type: "onedrive",
-    processing_status: "COMPLETED",
-    file_size_bytes: 4194304,
-    file_extension: "pptx",
-    mime_type:
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    author: "Events Team",
-    uploaded_by: "events@company.com",
-    created_at: "2024-04-01T09:00:00Z",
-    updated_at: "2024-04-01T09:05:00Z",
-    file_created_at: "2024-03-30T10:00:00Z",
-    file_modified_at: "2024-03-30T12:00:00Z",
-    keywords: ["company", "retreat", "itinerary", "events", "annual"],
-    category_ids: ["cat-2"],
-    topic_ids: ["topic-10"],
-    has_chunks: true,
-    has_errors: false,
-    is_recent: true,
-    view_count: 95,
-    last_accessed: "2024-06-27T09:30:00Z",
-  },
-];
+interface DocumentsResponse {
+  items: Document[];
+  total: number;
+  page: number;
+  size: number;
+  has_more: boolean;
+}
+
 
 const sourceTypeOptions = [
   {
@@ -364,20 +120,6 @@ const sourceTypeOptions = [
 
 const processingStatusOptions = [
   {
-    value: "COMPLETED",
-    label: "Completed",
-    color: "text-green-700", // Darker green for better contrast
-    bgColor: "bg-green-100 border-green-300", // Adjusted for better visibility
-    icon: CheckCircle,
-  },
-  {
-    value: "EMBEDDING",
-    label: "Processing",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100 border-blue-300",
-    icon: RefreshCw,
-  },
-  {
     value: "PENDING",
     label: "Pending",
     color: "text-yellow-700",
@@ -385,11 +127,25 @@ const processingStatusOptions = [
     icon: Clock,
   },
   {
-    value: "FAILED_PARSING",
-    label: "Failed",
-    color: "text-red-700",
-    bgColor: "bg-red-100 border-red-300",
-    icon: AlertCircle,
+    value: "PARSING",
+    label: "Parsing",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100 border-blue-300",
+    icon: RefreshCw,
+  },
+  {
+    value: "CHUNKING",
+    label: "Chunking",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100 border-blue-300",
+    icon: RefreshCw,
+  },
+  {
+    value: "EMBEDDING",
+    label: "Embedding",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100 border-blue-300",
+    icon: RefreshCw,
   },
   {
     value: "INDEXING",
@@ -398,6 +154,48 @@ const processingStatusOptions = [
     bgColor: "bg-purple-100 border-purple-300",
     icon: Zap,
   },
+  {
+    value: "COMPLETED",
+    label: "Completed",
+    color: "text-green-700",
+    bgColor: "bg-green-100 border-green-300",
+    icon: CheckCircle,
+  },
+  {
+    value: "FAILED",
+    label: "Failed",
+    color: "text-red-700",
+    bgColor: "bg-red-100 border-red-300",
+    icon: AlertCircle,
+  },
+  {
+    value: "FAILED_PARSING",
+    label: "Failed (Parsing)",
+    color: "text-red-700",
+    bgColor: "bg-red-100 border-red-300",
+    icon: AlertCircle,
+  },
+  {
+    value: "FAILED_CHUNKING",
+    label: "Failed (Chunking)",
+    color: "text-red-700",
+    bgColor: "bg-red-100 border-red-300",
+    icon: AlertCircle,
+  },
+  {
+    value: "FAILED_EMBEDDING",
+    label: "Failed (Embedding)",
+    color: "text-red-700",
+    bgColor: "bg-red-100 border-red-300",
+    icon: AlertCircle,
+  },
+  {
+    value: "FAILED_INDEXING",
+    label: "Failed (Indexing)",
+    color: "text-red-700",
+    bgColor: "bg-red-100 border-red-300",
+    icon: AlertCircle,
+  },
 ];
 
 const sortOptions = [
@@ -405,19 +203,19 @@ const sortOptions = [
   { value: "updated_at", label: "Date Updated" },
   { value: "name", label: "Name" },
   { value: "file_size_bytes", label: "File Size" },
-  { value: "view_count", label: "Most Viewed" },
-  { value: "last_accessed", label: "Recently Accessed" },
 ];
 
-const quickFilters = [
-  { label: "Recent", value: "recent", icon: Clock },
-  { label: "Suggested", value: "suggested", icon: Sparkles },
-  { label: "Popular", value: "popular", icon: TrendingUp }, // Changed from Most Viewed for brevity
-  { label: "Bookmarked", value: "bookmarked", icon: Bookmark },
-];
+// Removed quick filters for now as they require additional API support
 
 function DocumentsPage() {
-  const [documents, setDocuments] = useState<Document[]>(mockDocuments);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [totalDocuments, setTotalDocuments] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [hasMore, setHasMore] = useState(false);
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSourceTypes, setSelectedSourceTypes] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -426,103 +224,76 @@ function DocumentsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [showFilters, setShowFilters] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  const [activeQuickFilter, setActiveQuickFilter] = useState<string | null>(
-    null
-  );
-
-  const filteredDocuments = useMemo(() => {
-    let filtered = [...documents];
-
-    if (activeQuickFilter) {
-      switch (activeQuickFilter) {
-        case "recent":
-          filtered = filtered.filter((doc) => doc.is_recent);
-          break;
-        case "suggested":
-          filtered = filtered.filter((doc) => doc.is_suggested);
-          break;
-        case "popular":
-          filtered = filtered
-            .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
-            .slice(0, 10);
-          break;
-        case "bookmarked":
-          filtered = filtered.filter(
-            (doc) =>
-              doc.keywords.includes("budget") ||
-              doc.keywords.includes("strategy")
-          );
-          break;
+  
+  // Debounce search query
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+  
+  // Fetch documents from API
+  const fetchDocuments = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const params = new URLSearchParams();
+      params.append("page", page.toString());
+      params.append("size", pageSize.toString());
+      params.append("sort_by", sortBy);
+      params.append("sort_order", sortOrder);
+      
+      if (debouncedSearchQuery) {
+        params.append("search", debouncedSearchQuery);
       }
-    }
-
-    if (searchQuery) {
-      const lowerSearchQuery = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (doc) =>
-          doc.name.toLowerCase().includes(lowerSearchQuery) ||
-          doc.author?.toLowerCase().includes(lowerSearchQuery) ||
-          doc.keywords.some((keyword) =>
-            keyword.toLowerCase().includes(lowerSearchQuery)
-          )
-      );
-    }
-
-    if (selectedSourceTypes.length > 0) {
-      filtered = filtered.filter((doc) =>
-        selectedSourceTypes.includes(doc.source_type)
-      );
-    }
-
-    if (selectedStatuses.length > 0) {
-      filtered = filtered.filter((doc) =>
-        selectedStatuses.includes(doc.processing_status)
-      );
-    }
-
-    if (dateRange && (dateRange.from || dateRange.to)) {
-      filtered = filtered.filter((doc) => {
-        const docDate = new Date(doc.created_at);
-        if (dateRange.from && docDate < dateRange.from) return false;
-        if (dateRange.to && docDate > dateRange.to) return false;
-        return true;
+      
+      selectedSourceTypes.forEach((type) => {
+        params.append("source_types", type);
       });
-    }
-
-    if (!activeQuickFilter || activeQuickFilter !== "popular") {
-      filtered.sort((a, b) => {
-        let aValue: any = a[sortBy as keyof Document];
-        let bValue: any = b[sortBy as keyof Document];
-
-        if (sortBy === "file_size_bytes" || sortBy === "view_count") {
-          aValue = Number(aValue) || 0;
-          bValue = Number(bValue) || 0;
-        } else if (sortBy.includes("_at") || sortBy === "last_accessed") {
-          aValue = aValue ? new Date(aValue).getTime() : 0;
-          bValue = bValue ? new Date(bValue).getTime() : 0;
-        } else if (typeof aValue === "string") {
-          aValue = aValue.toLowerCase();
-          bValue = bValue.toLowerCase();
-        }
-
-        if (sortOrder === "asc") {
-          return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
-        } else {
-          return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
-        }
+      
+      selectedStatuses.forEach((status) => {
+        params.append("processing_statuses", status);
       });
+      
+      if (dateRange?.from) {
+        params.append("created_after", dateRange.from.toISOString());
+      }
+      if (dateRange?.to) {
+        params.append("created_before", dateRange.to.toISOString());
+      }
+      
+      const response = await fetch(`/api/documents?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch documents");
+      }
+      
+      const data: DocumentsResponse = await response.json();
+      setDocuments(data.items);
+      setTotalDocuments(data.total);
+      setHasMore(data.has_more);
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+      setError(err instanceof Error ? err.message : "Failed to load documents");
+    } finally {
+      setIsLoading(false);
     }
-    return filtered;
-  }, [
-    documents,
-    searchQuery,
-    selectedSourceTypes,
-    selectedStatuses,
-    sortBy,
-    sortOrder,
-    dateRange,
-    activeQuickFilter,
-  ]);
+  }, [page, pageSize, sortBy, sortOrder, debouncedSearchQuery, selectedSourceTypes, selectedStatuses, dateRange]);
+  
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
+  
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchQuery, selectedSourceTypes, selectedStatuses, dateRange, sortBy, sortOrder]);
+
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -534,7 +305,7 @@ function DocumentsPage() {
     );
   };
 
-  const getFileIcon = (extension: string, size: "sm" | "md" | "lg" = "md") => {
+  const getFileIcon = (extension: string | null | undefined, size: "sm" | "md" | "lg" = "md") => {
     const sizeClass =
       size === "sm" ? "w-4 h-4" : size === "lg" ? "w-8 h-8" : "w-5 h-5";
     switch (extension?.toLowerCase()) {
@@ -609,7 +380,6 @@ function DocumentsPage() {
     setSelectedSourceTypes([]);
     setSelectedStatuses([]);
     setDateRange(undefined);
-    setActiveQuickFilter(null);
   };
 
   const activeFiltersCount = useMemo(
@@ -617,21 +387,15 @@ function DocumentsPage() {
       (searchQuery ? 1 : 0) +
       selectedSourceTypes.length +
       selectedStatuses.length +
-      (dateRange && (dateRange.from || dateRange.to) ? 1 : 0) +
-      (activeQuickFilter ? 1 : 0),
+      (dateRange && (dateRange.from || dateRange.to) ? 1 : 0),
     [
       searchQuery,
       selectedSourceTypes,
       selectedStatuses,
       dateRange,
-      activeQuickFilter,
     ]
   );
 
-  const suggestedDocuments = useMemo(
-    () => documents.filter((doc) => doc.is_suggested).slice(0, 3),
-    [documents]
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-[#fafbf9] to-[#f0f7e8] text-[#3E4128]">
@@ -648,25 +412,13 @@ function DocumentsPage() {
                 <h1 className="text-3xl sm:text-4xl font-serif text-[#3E4128]">
                   Documents
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 flex items-center flex-wrap gap-x-4 gap-y-1">
-                  <span>
-                    {filteredDocuments.length} of {documents.length} documents
-                  </span>
-                  {activeQuickFilter && (
-                    <>
-                      <Separator
-                        orientation="vertical"
-                        className="h-4 hidden sm:block"
-                      />
-                      <span className="text-[#A3BC02] font-medium">
-                        {
-                          quickFilters.find(
-                            (f) => f.value === activeQuickFilter
-                          )?.label
-                        }{" "}
-                        view
-                      </span>
-                    </>
+                <p className="text-sm text-gray-500 mt-1">
+                  {isLoading ? (
+                    "Loading documents..."
+                  ) : error ? (
+                    <span className="text-red-500">{error}</span>
+                  ) : (
+                    <span>{totalDocuments} total documents</span>
                   )}
                 </p>
               </div>
@@ -695,34 +447,6 @@ function DocumentsPage() {
               </div>
             </div>
 
-            <div className="mb-5">
-              <ScrollArea className="w-full whitespace-nowrap pb-2">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {quickFilters.map((filter) => {
-                    const Icon = filter.icon;
-                    const isActive = activeQuickFilter === filter.value;
-                    return (
-                      <Button
-                        key={filter.value}
-                        variant={isActive ? "default" : "outline"}
-                        size="sm"
-                        onClick={() =>
-                          setActiveQuickFilter(isActive ? null : filter.value)
-                        }
-                        className={`h-9 ${
-                          isActive
-                            ? "bg-[#A3BC02] hover:bg-[#8BA000] text-white"
-                            : "bg-white hover:bg-gray-50"
-                        }`}
-                      >
-                        <Icon className="w-3.5 h-3.5 mr-1.5" />
-                        {filter.label}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            </div>
 
             <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
               <div className="flex-1 relative">
@@ -952,54 +676,33 @@ function DocumentsPage() {
         </AnimatePresence>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          {!activeQuickFilter && suggestedDocuments.length > 0 && (
-            <motion.section
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <RefreshCw className="w-8 h-8 text-[#A3BC02] animate-spin" />
+            </div>
+          ) : error ? (
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-10"
+              className="text-center py-16 sm:py-24"
             >
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-[#A3BC02]" />
-                <h2 className="text-xl font-semibold text-[#3E4128]">
-                  Suggested for You
-                </h2>
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-500" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {suggestedDocuments.map((doc) => (
-                  <Card
-                    key={doc.id}
-                    className="hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-[#A3BC02]/20 bg-white/50 group"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        {getFileIcon(doc.file_extension, "md")}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-[#3E4128] text-sm line-clamp-2 mb-1.5 group-hover:text-[#A3BC02] transition-colors">
-                            {doc.name}
-                          </h3>
-                          <div className="flex items-center gap-2 mb-2">
-                            {getStatusBadge(doc.processing_status)}
-                          </div>
-                          <div className="text-xs text-gray-500 space-y-1">
-                            <div className="flex justify-between">
-                              <span>{formatFileSize(doc.file_size_bytes)}</span>
-                              <span>{doc.view_count} views</span>
-                            </div>
-                            <div>
-                              {format(new Date(doc.created_at), "MMM dd, yyyy")}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              <Separator className="mt-8 bg-gray-200/80" />
-            </motion.section>
-          )}
-
-          {filteredDocuments.length === 0 ? (
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-700 mb-2">
+                Failed to load documents
+              </h3>
+              <p className="text-gray-500 mb-8 max-w-md mx-auto text-sm sm:text-base">
+                {error}
+              </p>
+              <Button
+                onClick={fetchDocuments}
+                className="bg-[#A3BC02] hover:bg-[#8BA000] text-white"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" /> Try Again
+              </Button>
+            </motion.div>
+          ) : documents.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1040,7 +743,7 @@ function DocumentsPage() {
                   : "space-y-3 sm:space-y-4"
               }
             >
-              {filteredDocuments.map((doc, index) => (
+              {documents.map((doc, index) => (
                 <motion.div
                   key={doc.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -1053,7 +756,7 @@ function DocumentsPage() {
                       <CardHeader className="p-4 pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                            {getFileIcon(doc.file_extension, "lg")}
+                            {getFileIcon(doc.extension, "lg")}
                             <div className="flex-1 min-w-0 mt-0.5">
                               <CardTitle className="text-base font-semibold text-[#3E4128] mb-1.5 line-clamp-2 group-hover:text-[#A3BC02] transition-colors">
                                 {doc.name}
@@ -1105,19 +808,19 @@ function DocumentsPage() {
                           <div className="flex justify-between items-center">
                             <span>Size:</span>
                             <span className="font-medium text-gray-700">
-                              {formatFileSize(doc.file_size_bytes)}
+                              {formatFileSize(doc.file_size_bytes || 0)}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span>Author:</span>
+                            <span>Uploaded by:</span>
                             <span className="font-medium text-gray-700 truncate ml-2">
-                              {doc.author || "N/A"}
+                              {doc.uploaded_by || "N/A"}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
-                            <span>Views:</span>
+                            <span>Chunks:</span>
                             <span className="font-medium text-gray-700">
-                              {doc.view_count || 0}
+                              {doc.chunk_count || 0}
                             </span>
                           </div>
                           <div className="flex justify-between items-center">
@@ -1126,17 +829,6 @@ function DocumentsPage() {
                               {format(new Date(doc.created_at), "MMM dd, yyyy")}
                             </span>
                           </div>
-                          {doc.last_accessed && (
-                            <div className="flex justify-between items-center">
-                              <span>Accessed:</span>
-                              <span className="font-medium text-gray-700">
-                                {formatDistanceToNowStrict(
-                                  new Date(doc.last_accessed),
-                                  { addSuffix: true }
-                                )}
-                              </span>
-                            </div>
-                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -1147,7 +839,7 @@ function DocumentsPage() {
                           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                             <div className="flex-shrink-0 flex items-center gap-2 sm:gap-3">
                               {getStatusIcon(doc.processing_status)}
-                              {getFileIcon(doc.file_extension)}
+                              {getFileIcon(doc.extension)}
                             </div>
                             <div className="flex-1 min-w-0">
                               <h3 className="font-semibold text-[#3E4128] truncate group-hover:text-[#A3BC02] transition-colors text-sm sm:text-base">
@@ -1155,10 +847,7 @@ function DocumentsPage() {
                               </h3>
                               <div className="hidden sm:flex items-center flex-wrap gap-x-3 gap-y-1 text-xs text-gray-500 mt-1">
                                 <span className="font-medium">
-                                  {formatFileSize(doc.file_size_bytes)}
-                                </span>
-                                <span className="truncate max-w-[120px]">
-                                  {doc.author || "N/A"}
+                                  {formatFileSize(doc.file_size_bytes || 0)}
                                 </span>
                                 <span>
                                   {format(
@@ -1166,17 +855,10 @@ function DocumentsPage() {
                                     "MMM dd, 'yy"
                                   )}
                                 </span>
-                                <span className="flex items-center gap-1">
-                                  <Eye className="w-3 h-3" />
-                                  {doc.view_count || 0}
-                                </span>
-                                {doc.last_accessed && (
-                                  <span>
-                                    Accessed:{" "}
-                                    {formatDistanceToNowStrict(
-                                      new Date(doc.last_accessed),
-                                      { addSuffix: true }
-                                    )}
+                                {doc.chunk_count !== null && doc.chunk_count !== undefined && (
+                                  <span className="flex items-center gap-1">
+                                    <FileText className="w-3 h-3" />
+                                    {doc.chunk_count} chunks
                                   </span>
                                 )}
                               </div>
@@ -1226,18 +908,17 @@ function DocumentsPage() {
                         {/* Mobile-specific metadata row */}
                         <div className="sm:hidden flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200/80">
                           <span className="font-medium">
-                            {formatFileSize(doc.file_size_bytes)}
-                          </span>
-                          <span className="truncate max-w-[120px]">
-                            {doc.author || "N/A"}
+                            {formatFileSize(doc.file_size_bytes || 0)}
                           </span>
                           <span>
                             {format(new Date(doc.created_at), "MMM dd, 'yy")}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Eye className="w-3 h-3" />
-                            {doc.view_count || 0}
-                          </span>
+                          {doc.chunk_count !== null && doc.chunk_count !== undefined && (
+                            <span className="flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              {doc.chunk_count}
+                            </span>
+                          )}
                           {getStatusBadge(doc.processing_status)}
                           {getSourceBadge(doc.source_type)}
                         </div>
@@ -1247,6 +928,36 @@ function DocumentsPage() {
                 </motion.div>
               ))}
             </motion.div>
+          )}
+          
+          {/* Pagination */}
+          {documents.length > 0 && (
+            <div className="mt-8 flex items-center justify-between">
+              <p className="text-sm text-gray-500">
+                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, totalDocuments)} of {totalDocuments} documents
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm text-gray-600 px-3">
+                  Page {page}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={!hasMore}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </main>
       </div>

@@ -23,8 +23,10 @@ import {
   Sparkles,
   AlertCircle,
   ChevronDown,
+  PlusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Markdown from "markdown-to-jsx";
 
 interface Citation {
   index: number;
@@ -80,7 +82,7 @@ export default function ChatPage() {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
     }
   }, [input]);
 
@@ -90,7 +92,7 @@ export default function ChatPage() {
       if (response.ok) {
         const data = await response.json();
         setCurrentConversationId(conversationId);
-        
+
         // Convert backend messages to frontend format
         const formattedMessages: ChatMessage[] = (data.messages || []).map((msg: any) => ({
           id: msg.id,
@@ -99,7 +101,7 @@ export default function ChatPage() {
           citations: msg.citations || [],
           timestamp: new Date(msg.created_at),
         }));
-        
+
         setMessages(formattedMessages);
       }
     } catch (error) {
@@ -141,7 +143,7 @@ export default function ChatPage() {
     try {
       // Create abort controller for cancellation
       abortControllerRef.current = new AbortController();
-      
+
       const response = await fetch("/api/chat/stream", {
         method: "POST",
         headers: {
@@ -177,34 +179,34 @@ export default function ChatPage() {
 
         // Decode chunk and add to buffer
         buffer += decoder.decode(value, { stream: true });
-        
+
         // Process complete messages (ending with \n\n)
         let boundary = buffer.lastIndexOf("\n\n");
         if (boundary !== -1) {
           const complete = buffer.substring(0, boundary);
           buffer = buffer.substring(boundary + 2);
-          
+
           // Process each line
           const lines = complete.split("\n");
           for (const line of lines) {
             if (!line.trim()) continue;
-            
+
             if (line.startsWith("data: ")) {
               const data = line.substring(6);
               if (data === "[DONE]") {
                 setIsStreaming(false);
                 continue;
               }
-              
+
               try {
                 const parsed = JSON.parse(data);
-                
+
                 // Update the last assistant message
                 setMessages((prev) => {
                   const newMessages = [...prev];
                   const lastIndex = newMessages.length - 1;
                   const lastMessage = newMessages[lastIndex];
-                  
+
                   if (lastMessage && lastMessage.role === "assistant") {
                     if (parsed.type === "token" && parsed.content !== null && parsed.content !== undefined) {
                       // Create a new message object to ensure React detects the change
@@ -231,7 +233,7 @@ export default function ChatPage() {
                       }
                     }
                   }
-                  
+
                   return newMessages;
                 });
               } catch (e) {
@@ -241,7 +243,7 @@ export default function ChatPage() {
           }
         }
       }
-      
+
       // Process any remaining data in buffer
       if (buffer.trim()) {
         const lines = buffer.split("\n");
@@ -312,17 +314,17 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="min-h-0 flex-1 flex flex-col bg-gray-50/30">
       {/* Header */}
-      <div className="border-b bg-white px-6 py-4">
+      <div className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-[#A3BC02]/10 rounded-lg">
+            <div className="w-9 h-9 bg-[#A3BC02]/15 rounded-full flex items-center justify-center">
               <Bot className="w-5 h-5 text-[#A3BC02]" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">AI Assistant</h1>
-              <p className="text-sm text-gray-500">Chat with your documents</p>
+              <h1 className="text-lg font-semibold text-gray-900 font-serif">Chat with Monolith</h1>
+              <p className="text-sm text-gray-500">Ask questions about your documents</p>
             </div>
           </div>
           {messages.length > 0 && (
@@ -330,8 +332,9 @@ export default function ChatPage() {
               variant="ghost"
               size="sm"
               onClick={startNewConversation}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
             >
+              <PlusCircle className="w-4 h-4 mr-2" />
               New chat
             </Button>
           )}
@@ -339,44 +342,39 @@ export default function ChatPage() {
       </div>
 
       {/* Messages Area */}
-      <ScrollArea ref={scrollAreaRef} className="flex-1 px-6">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 px-4 md:px-8 lg:px-12">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full py-20">
-            <div className="text-center max-w-md">
-              <div className="mx-auto w-16 h-16 bg-[#A3BC02]/10 rounded-full flex items-center justify-center mb-4">
-                <MessageSquare className="w-8 h-8 text-[#A3BC02]" />
+          <div className="flex items-center justify-center h-full py-16">
+            <div className="text-center max-w-lg">
+              <div className="mx-auto w-20 h-20 bg-[#A3BC02]/10 rounded-full flex items-center justify-center mb-6">
+                <MessageSquare className="w-10 h-10 text-[#A3BC02]" />
               </div>
-              <h2 className="text-lg font-semibold mb-2">Start a conversation</h2>
-              <p className="text-gray-500 mb-6">
-                Ask questions about your documents and get intelligent answers with citations
+              <h2 className="text-xl font-serif font-semibold mb-3 text-gray-900">Start a conversation</h2>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                Ask questions about your documents and get intelligent answers with source citations.
               </p>
-              <div className="space-y-2 text-left">
-                <button
-                  onClick={() => setInput("What are the key insights from recent documents?")}
-                  className="w-full p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-gray-700"
-                >
-                  <Sparkles className="w-4 h-4 inline mr-2 text-[#A3BC02]" />
-                  What are the key insights from recent documents?
-                </button>
-                <button
-                  onClick={() => setInput("Summarize the main themes across all documents")}
-                  className="w-full p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-gray-700"
-                >
-                  <Sparkles className="w-4 h-4 inline mr-2 text-[#A3BC02]" />
-                  Summarize the main themes across all documents
-                </button>
-                <button
-                  onClick={() => setInput("Find information about budget planning")}
-                  className="w-full p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-gray-700"
-                >
-                  <Sparkles className="w-4 h-4 inline mr-2 text-[#A3BC02]" />
-                  Find information about budget planning
-                </button>
+              <div className="grid gap-3 text-left">
+                {[
+                  "What are the key insights from recent documents?",
+                  "Summarize the main themes across all documents",
+                  "Find information about budget planning"
+                ].map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setInput(suggestion)}
+                    className="group p-4 text-sm bg-white border border-gray-200 rounded-xl hover:border-[#A3BC02]/30 hover:bg-[#A3BC02]/5 transition-all duration-200 text-left"
+                  >
+                    <div className="flex items-center">
+                      <Sparkles className="w-4 h-4 mr-3 text-[#A3BC02] group-hover:text-[#8BA000]" />
+                      <span className="text-gray-700 group-hover:text-gray-900">{suggestion}</span>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         ) : (
-          <div className="py-6 space-y-6">
+          <div className="max-w-4xl mx-auto py-6">
             <AnimatePresence>
               {messages.map((message, index) => (
                 <motion.div
@@ -384,47 +382,183 @@ export default function ChatPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.2 }}
                   className={cn(
-                    "flex gap-4",
-                    message.role === "assistant" ? "justify-start" : "justify-end"
+                    "mb-6 flex",
+                    message.role === "user" ? "justify-end" : "justify-start"
                   )}
                 >
-                  {message.role === "assistant" && (
-                    <div className="flex-shrink-0 w-8 h-8 bg-[#A3BC02]/10 rounded-full flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-[#A3BC02]" />
-                    </div>
-                  )}
-                  
-                  <div
-                    className={cn(
-                      "flex-1 max-w-2xl",
-                      message.role === "user" && "max-w-lg"
-                    )}
-                  >
-                    <Card
-                      className={cn(
-                        "overflow-hidden",
-                        message.role === "user"
-                          ? "bg-[#3E4128] text-white"
-                          : "bg-white"
+                  <div className={cn(
+                    "flex gap-3 max-w-[85%]",
+                    message.role === "user" ? "flex-row-reverse" : "flex-row"
+                  )}>
+                    {/* Avatar */}
+                    <div className="flex-shrink-0">
+                      {message.role === "assistant" ? (
+                        <div className="w-8 h-8 bg-[#A3BC02]/15 rounded-full flex items-center justify-center">
+                          <Bot className="w-4 h-4 text-[#A3BC02]" />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-gray-600" />
+                        </div>
                       )}
-                    >
-                      <CardContent className="p-4">
-                        <div className="prose prose-sm max-w-none">
-                          <p
-                            className={cn(
-                              "whitespace-pre-wrap mb-0",
-                              message.role === "user" && "text-white"
-                            )}
-                          >
-                            {message.content}
-                          </p>
+                    </div>
+
+                    {/* Message Content */}
+                    <div className="flex-1">
+                      <div
+                        className={cn(
+                          "rounded-2xl px-4 py-3 shadow-sm",
+                          message.role === "user"
+                            ? "bg-[#3E4128] text-white"
+                            : "bg-white border border-gray-200"
+                        )}
+                      >
+                        {/* Message Text */}
+                        <div className="max-w-none">
+                          {!message.content && message.role === "assistant" && isStreaming ? (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-gray-500">
+                                <div className="flex gap-1">
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                                </div>
+                                <span className="text-sm">Thinking...</span>
+                              </div>
+                            </div>
+                          ) : message.role === "assistant" ? (
+                            <div className="markdown-content">
+                              <Markdown
+                                options={{
+                                  overrides: {
+                                    h1: {
+                                      component: 'h1',
+                                      props: {
+                                        className: 'text-xl font-serif font-semibold mb-3 text-gray-900'
+                                      }
+                                    },
+                                    h2: {
+                                      component: 'h2',
+                                      props: {
+                                        className: 'text-lg font-serif font-semibold mb-2 mt-4 text-gray-900'
+                                      }
+                                    },
+                                    h3: {
+                                      component: 'h3',
+                                      props: {
+                                        className: 'text-base font-semibold mb-2 mt-3 text-gray-900'
+                                      }
+                                    },
+                                    p: {
+                                      component: 'p',
+                                      props: {
+                                        className: 'mb-3 leading-relaxed text-gray-800 last:mb-0'
+                                      }
+                                    },
+                                    ul: {
+                                      component: 'ul',
+                                      props: {
+                                        className: 'list-disc pl-4 mb-3 space-y-1'
+                                      }
+                                    },
+                                    ol: {
+                                      component: 'ol',
+                                      props: {
+                                        className: 'list-decimal pl-4 mb-3 space-y-1'
+                                      }
+                                    },
+                                    li: {
+                                      component: 'li',
+                                      props: {
+                                        className: 'text-gray-800 leading-relaxed'
+                                      }
+                                    },
+                                    strong: {
+                                      component: 'strong',
+                                      props: {
+                                        className: 'font-semibold text-gray-900'
+                                      }
+                                    },
+                                    em: {
+                                      component: 'em',
+                                      props: {
+                                        className: 'italic text-gray-800'
+                                      }
+                                    },
+                                    code: {
+                                      component: 'code',
+                                      props: {
+                                        className: 'bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800'
+                                      }
+                                    },
+                                    pre: {
+                                      component: 'pre',
+                                      props: {
+                                        className: 'bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3 overflow-x-auto'
+                                      }
+                                    },
+                                    blockquote: {
+                                      component: 'blockquote',
+                                      props: {
+                                        className: 'border-l-4 border-[#A3BC02] pl-4 italic text-gray-700 my-3'
+                                      }
+                                    },
+                                    a: {
+                                      component: 'a',
+                                      props: {
+                                        className: 'text-[#A3BC02] hover:text-[#8BA000] underline transition-colors',
+                                        target: '_blank',
+                                        rel: 'noopener noreferrer'
+                                      }
+                                    },
+                                    table: {
+                                      component: 'table',
+                                      props: {
+                                        className: 'w-full border-collapse border border-gray-200 mb-3 text-sm'
+                                      }
+                                    },
+                                    thead: {
+                                      component: 'thead',
+                                      props: {
+                                        className: 'bg-gray-50'
+                                      }
+                                    },
+                                    th: {
+                                      component: 'th',
+                                      props: {
+                                        className: 'border border-gray-200 px-3 py-2 text-left font-semibold text-gray-900'
+                                      }
+                                    },
+                                    td: {
+                                      component: 'td',
+                                      props: {
+                                        className: 'border border-gray-200 px-3 py-2 text-gray-800'
+                                      }
+                                    },
+                                    hr: {
+                                      component: 'hr',
+                                      props: {
+                                        className: 'border-gray-200 my-4'
+                                      }
+                                    }
+                                  }
+                                }}
+                              >
+                                {message.content}
+                              </Markdown>
+                            </div>
+                          ) : (
+                            <p className="whitespace-pre-wrap mb-0 leading-relaxed text-white">
+                              {message.content}
+                            </p>
+                          )}
                         </div>
 
                         {/* Error state */}
                         {message.error && (
-                          <div className="mt-3 flex items-center gap-2 text-red-500">
+                          <div className="mt-3 flex items-center gap-2 text-red-600 bg-red-50 px-3 py-2 rounded-lg">
                             <AlertCircle className="w-4 h-4" />
                             <span className="text-sm">{message.error}</span>
                           </div>
@@ -432,22 +566,21 @@ export default function ChatPage() {
 
                         {/* Citations */}
                         {message.citations && message.citations.length > 0 && (
-                          <div className="mt-4 space-y-2">
-                            <Separator />
-                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <div className="mt-4 pt-3 border-t border-gray-100">
+                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
                               Sources
                             </div>
                             <div className="space-y-2">
                               {message.citations.map((citation, idx) => (
                                 <div
                                   key={idx}
-                                  className="p-3 bg-gray-50 rounded-lg text-sm"
+                                  className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors cursor-pointer"
                                 >
                                   <div className="flex items-start justify-between gap-2">
-                                    <div className="flex-1">
+                                    <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <FileText className="w-3 h-3 text-gray-400" />
-                                        <span className="font-medium text-gray-700">
+                                        <FileText className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                                        <span className="font-medium text-gray-800 text-sm truncate">
                                           {citation.metadata?.filename || `Source ${citation.index}`}
                                         </span>
                                         {citation.metadata?.page && (
@@ -456,14 +589,14 @@ export default function ChatPage() {
                                           </Badge>
                                         )}
                                       </div>
-                                      <p className="text-gray-600 text-xs line-clamp-2">
+                                      <p className="text-gray-600 text-xs line-clamp-2 leading-relaxed">
                                         {citation.content}
                                       </p>
                                     </div>
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      className="h-6 w-6"
+                                      className="h-6 w-6 text-gray-400 hover:text-gray-600 hover:bg-gray-200"
                                       onClick={() => {
                                         // TODO: Open document viewer
                                         toast.info("Document viewer coming soon");
@@ -478,13 +611,13 @@ export default function ChatPage() {
                           </div>
                         )}
 
-                        {/* Actions */}
-                        {message.role === "assistant" && !message.error && (
-                          <div className="mt-3 flex items-center gap-2">
+                        {/* Actions for assistant messages */}
+                        {message.role === "assistant" && message.content && !message.error && (
+                          <div className="mt-3 pt-2 border-t border-gray-100">
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-7 text-xs"
+                              className="h-7 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100"
                               onClick={() => handleCopy(message.content)}
                             >
                               <Copy className="w-3 h-3 mr-1" />
@@ -492,45 +625,27 @@ export default function ChatPage() {
                             </Button>
                           </div>
                         )}
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {message.role === "user" && (
-                    <div className="flex-shrink-0 w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-gray-600" />
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
-
-            {/* Streaming indicator */}
-            {isStreaming && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2 text-gray-500 text-sm"
-              >
-                <Loader2 className="w-3 h-3 animate-spin" />
-                AI is thinking...
-              </motion.div>
-            )}
           </div>
         )}
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="border-t bg-white p-4">
-        <div className="max-w-3xl mx-auto">
-          <div className="relative">
+      <div className="flex-shrink-0 bg-white border-t border-gray-200 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-[#A3BC02]/50 focus-within:bg-white transition-all">
             <Textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask a question about your documents..."
-              className="min-h-[60px] max-h-[200px] pr-24 resize-none"
+              className="min-h-[56px] max-h-[120px] resize-none border-0 bg-transparent px-4 py-4 pr-16 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-500"
               disabled={isStreaming}
             />
             <div className="absolute bottom-3 right-3 flex items-center gap-2">
@@ -539,7 +654,7 @@ export default function ChatPage() {
                   size="sm"
                   variant="ghost"
                   onClick={stopStreaming}
-                  className="h-8"
+                  className="h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-200"
                 >
                   <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                   Stop
@@ -551,7 +666,7 @@ export default function ChatPage() {
                       size="sm"
                       variant="ghost"
                       onClick={handleRetry}
-                      className="h-8"
+                      className="h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-200"
                     >
                       <RotateCw className="w-4 h-4" />
                     </Button>
@@ -560,7 +675,7 @@ export default function ChatPage() {
                     size="sm"
                     onClick={handleSubmit}
                     disabled={!input.trim() || isLoading}
-                    className="h-8 bg-[#A3BC02] hover:bg-[#8BA000]"
+                    className="h-8 bg-[#A3BC02] hover:bg-[#8BA000] text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Send className="w-4 h-4" />
                   </Button>
@@ -568,7 +683,7 @@ export default function ChatPage() {
               )}
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-gray-500 mt-2 text-center">
             Press Enter to send, Shift+Enter for new line
           </p>
         </div>

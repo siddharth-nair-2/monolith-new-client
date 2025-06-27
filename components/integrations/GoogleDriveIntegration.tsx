@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  Cloud, 
   Loader2, 
   CheckCircle, 
   XCircle, 
@@ -19,6 +18,7 @@ import {
   Eye,
   Zap
 } from 'lucide-react';
+import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { clientApiRequest, clientApiRequestJson } from '@/lib/client-api';
 import { useIntegrations } from '@/lib/integrations-context';
@@ -92,24 +92,6 @@ export default function GoogleDriveIntegration() {
     }
   };
 
-  const refreshConnection = async (connectionId: string) => {
-    try {
-      const response = await clientApiRequest(`/api/proxy/v1/connections/${connectionId}/refresh`, {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        toast.success('Connection refreshed successfully');
-        refreshConnections();
-      } else {
-        const error = await response.json();
-        toast.error(error.detail || 'Failed to refresh connection');
-      }
-    } catch (error) {
-      console.error('Refresh error:', error);
-      toast.error('Failed to refresh connection');
-    }
-  };
 
   const handleSyncCreated = () => {
     setShowSyncConfig(false);
@@ -133,9 +115,12 @@ export default function GoogleDriveIntegration() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
-            <div className="p-2 bg-gray-50 rounded-lg">
-              <Cloud className="w-6 h-6 text-gray-400" />
-            </div>
+            <Image 
+              src="/icons/integrations/google_drive.svg"
+              alt="Google Drive"
+              width={32}
+              height={32}
+            />
             Google Drive Integration
           </CardTitle>
           <CardDescription>
@@ -164,20 +149,28 @@ export default function GoogleDriveIntegration() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Cloud className="w-6 h-6 text-blue-600" />
-            </div>
+            <Image 
+              src="/icons/integrations/google_drive.svg"
+              alt="Google Drive"
+              width={32}
+              height={32}
+            />
             <span className="font-serif">Google Drive Integration</span>
           </CardTitle>
           <CardDescription className="font-sans">
-            Connect your Google Drive to sync and search your documents. 
-            Supports native processing for Google Docs, Sheets, and Slides with enhanced metadata extraction.
+            Connect your Google Drive to sync and search your documents.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {connections.length === 0 ? (
             <div className="text-center py-8">
-              <Cloud className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <Image 
+                src="/icons/integrations/google_drive.svg"
+                alt="Google Drive"
+                width={48}
+                height={48}
+                className="mx-auto mb-4 opacity-50"
+              />
               <h3 className="text-lg font-serif font-medium text-gray-900 mb-2">No Google Drive Connected</h3>
               <p className="text-gray-500 mb-6 font-sans">
                 Connect your Google Drive account to start syncing and searching your documents.
@@ -209,9 +202,12 @@ export default function GoogleDriveIntegration() {
                   {connections.map((connection) => (
                     <div key={connection.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                          <Cloud className="w-5 h-5 text-blue-600" />
-                        </div>
+                        <Image 
+                          src="/icons/integrations/google_drive.svg"
+                          alt="Google Drive"
+                          width={24}
+                          height={24}
+                        />
                         <div>
                           <p className="font-serif font-medium">{connection.name}</p>
                           <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -228,23 +224,6 @@ export default function GoogleDriveIntegration() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => refreshConnection(connection.id)}
-                              >
-                                <RefreshCw className="w-4 h-4" />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="font-sans">Refresh connection status</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
                         {(() => {
                           const connectionSyncs = syncs.filter(sync => 
                             (sync.source_connection?.id || sync.source_connection_id) === connection.id
@@ -360,15 +339,6 @@ export default function GoogleDriveIntegration() {
         <SyncDashboard syncs={syncs} onRefresh={refreshSyncs} />
       )}
 
-      {/* Google Workspace Features Info */}
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Enhanced Google Workspace Support:</strong> This integration now includes native processing 
-          for Google Docs, Sheets, and Slides with preserved formatting, comments, and enhanced metadata extraction. 
-          Incremental sync dramatically improves performance for large drives.
-        </AlertDescription>
-      </Alert>
 
       {/* Dialogs */}
       {showFileBrowser && selectedConnection && (

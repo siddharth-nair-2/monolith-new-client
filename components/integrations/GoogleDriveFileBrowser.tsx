@@ -15,6 +15,7 @@ import {
   Check,
   ArrowLeft
 } from 'lucide-react';
+import Image from 'next/image';
 import { clientApiRequestJson } from '@/lib/client-api';
 import { toast } from 'sonner';
 
@@ -146,16 +147,41 @@ export default function GoogleDriveFileBrowser({ connectionId, onClose, onSyncCo
     }
   };
 
-  const getFileIcon = (file: GoogleDriveFile) => {
-    const workspaceIcons: Record<string, string> = {
-      'application/vnd.google-apps.document': '📝',
-      'application/vnd.google-apps.spreadsheet': '📊',
-      'application/vnd.google-apps.presentation': '📊',
-      'application/vnd.google-apps.form': '📋',
-      'application/vnd.google-apps.drawing': '🎨'
+  const getFileIcon = (mimeType: string): string => {
+    const mimeToIcon: Record<string, string> = {
+      // Google Workspace files
+      'application/vnd.google-apps.document': '/icons/filetypes/doc.svg',
+      'application/vnd.google-apps.spreadsheet': '/icons/filetypes/xls.svg',
+      'application/vnd.google-apps.presentation': '/icons/filetypes/ppt.svg',
+      
+      // Microsoft Office files
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/icons/filetypes/doc.svg',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '/icons/filetypes/xls.svg',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': '/icons/filetypes/ppt.svg',
+      'application/msword': '/icons/filetypes/doc.svg',
+      'application/vnd.ms-excel': '/icons/filetypes/xls.svg',
+      'application/vnd.ms-powerpoint': '/icons/filetypes/ppt.svg',
+      
+      // Other common types
+      'application/pdf': '/icons/filetypes/pdf.svg',
+      'text/plain': '/icons/filetypes/txt.svg',
+      'text/csv': '/icons/filetypes/csv.svg',
+      'text/xml': '/icons/filetypes/xml.svg',
+      'application/xml': '/icons/filetypes/xml.svg',
+      'text/html': '/icons/filetypes/file.svg',
+      'application/json': '/icons/filetypes/javascript.svg',
+      'text/javascript': '/icons/filetypes/javascript.svg',
+      'application/javascript': '/icons/filetypes/javascript.svg',
+      'text/css': '/icons/filetypes/css.svg',
+      'image/jpeg': '/icons/filetypes/jpg.svg',
+      'image/jpg': '/icons/filetypes/jpg.svg',
+      'image/png': '/icons/filetypes/png.svg',
+      'video/mp4': '/icons/filetypes/mp4.svg',
+      'audio/mpeg': '/icons/filetypes/mp3.svg',
+      'audio/mp3': '/icons/filetypes/mp3.svg',
     };
-
-    return workspaceIcons[file.mime_type] || '📄';
+    
+    return mimeToIcon[mimeType] || '/icons/filetypes/file.svg';
   };
 
   const isGoogleWorkspaceFile = (mimeType: string) => {
@@ -370,21 +396,13 @@ export default function GoogleDriveFileBrowser({ connectionId, onClose, onSyncCo
                       key={file.id}
                       className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50 opacity-75"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{getFileIcon(file)}</span>
-                        {isGoogleWorkspaceFile(file.mime_type) && (
-                          <Badge 
-                            variant="outline" 
-                            className={`text-xs ${
-                              getProcessingMethod(file) === 'native' 
-                                ? 'border-green-500 text-green-700' 
-                                : 'border-orange-500 text-orange-700'
-                            }`}
-                          >
-                            {getProcessingMethod(file) === 'native' ? '🚀 Enhanced' : '📤 Standard'}
-                          </Badge>
-                        )}
-                      </div>
+                      <Image 
+                        src={getFileIcon(file.mime_type)}
+                        alt={file.name}
+                        width={32}
+                        height={32}
+                        className="flex-shrink-0"
+                      />
                       
                       <div className="flex-1">
                         <p className="font-medium text-gray-700">{file.name}</p>

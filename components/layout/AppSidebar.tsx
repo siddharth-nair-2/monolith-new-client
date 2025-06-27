@@ -24,15 +24,8 @@ import {
   Bookmark,
   Clock,
   History,
-  Settings,
-  Circle,
-  Users,
-  Building2,
-  User,
-  LogOut,
-  Cloud,
+  Square,
 } from "lucide-react";
-import { useIntegrations } from "@/lib/integrations-context";
 
 interface CurrentUser {
   id: string;
@@ -67,25 +60,11 @@ const mockFocusSpaces = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
-  const { isGoogleDriveConnected, hasActiveSync } = useIntegrations();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
 
   const isActive = (path: string) => pathname === path;
 
-  // Check if current user is admin or owner
-  const isAdmin = () => {
-    return user?.role === 'admin' || user?.role === 'owner';
-  };
-
-  // Logout function using auth context
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
 
   // Set loading to false when user is available
   useEffect(() => {
@@ -96,11 +75,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="!bg-[#f8f9f5] border-r border-gray-200 border-l-8 border-l-[#8ECC3A] shadow-[inset_0_0_35px_rgba(163,188,4,0.25)]">
-      <SidebarHeader className="p-4">
-        {/* Logo */}
-        <div className="w-8 h-8 bg-[#A3BC02] rounded-lg flex items-center justify-center">
-          <span className="text-white font-serif font-bold text-sm">M</span>
-        </div>
+      <SidebarHeader className="p-1">
       </SidebarHeader>
 
       <SidebarContent className="px-2">
@@ -109,7 +84,11 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/dashboard")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/dashboard")}
+                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
+                >
                   <Link href="/dashboard">
                     <Home className="w-5 h-5" />
                     <span>Dashboard</span>
@@ -117,7 +96,11 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/documents")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/documents")}
+                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
+                >
                   <Link href="/documents">
                     <FileText className="w-5 h-5" />
                     <span>Documents</span>
@@ -125,7 +108,11 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/chat")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/chat")}
+                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
+                >
                   <Link href="/chat">
                     <MessageSquare className="w-5 h-5" />
                     <span>Chat</span>
@@ -133,7 +120,11 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/search")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/search")}
+                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
+                >
                   <Link href="/search">
                     <Search className="w-5 h-5" />
                     <span>Search</span>
@@ -150,7 +141,11 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/saved")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/saved")}
+                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
+                >
                   <Link href="/saved">
                     <Bookmark className="w-5 h-5" />
                     <span>Saved</span>
@@ -158,7 +153,11 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/recents")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/recents")}
+                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
+                >
                   <Link href="/recents">
                     <Clock className="w-5 h-5" />
                     <span>Recent</span>
@@ -166,7 +165,11 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/history")}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/history")}
+                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
+                >
                   <Link href="/history">
                     <History className="w-5 h-5" />
                     <span>History</span>
@@ -177,114 +180,47 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Workspace Section */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-600">Workspace</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/team")}>
-                  <Link href="/team">
-                    <Users className="w-5 h-5" />
-                    <span>Team</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              {isAdmin() && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/organization")}>
-                    <Link href="/organization">
-                      <Building2 className="w-5 h-5" />
-                      <span>Organization</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/profile")}>
-                  <Link href="/profile">
-                    <User className="w-5 h-5" />
-                    <span>Profile</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive("/settings")}>
-                  <Link href="/settings">
-                    <Settings className="w-5 h-5" />
-                    <span>Settings</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
-        {/* Integrations Section */}
-        {isGoogleDriveConnected && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-gray-600">Integrations</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/settings?tab=integrations")}>
-                    <Link href="/settings?tab=integrations">
-                      <div className="flex items-center gap-2">
-                        <Cloud className="w-5 h-5 text-blue-600" />
-                        {hasActiveSync && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        )}
-                      </div>
-                      <span>Google Drive</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
 
         {/* Focus Spaces */}
         <SidebarGroup className="mt-auto">
-          <SidebarGroupLabel className="flex items-center gap-2 text-gray-600">
-            <Circle className="w-4 h-4" />
+          <SidebarGroupLabel className="flex items-center gap-2 text-gray-600 pb-4 text-md">
+            <Square className="w-4 h-4" />
             <span>Focus Spaces</span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mockFocusSpaces.map((space) => (
-                <SidebarMenuItem key={space.id}>
-                  <SidebarMenuButton asChild>
-                    <Link href={`/dashboard/spaces/${space.id}`}>
-                      <span className="text-lg">{space.icon}</span>
-                      <span>{space.name}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              {mockFocusSpaces.map((space, index) => (
+                <div key={space.id}>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
+                    >
+                      <Link href={`/dashboard/spaces/${space.id}`}>
+                        <span className="text-lg text-custom-dark-green">{space.icon}</span>
+                        <span>{space.name}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  {index < mockFocusSpaces.length - 1 && (
+                    <div className="mx-2 my-1">
+                      <div className="border-b border-gray-300/70"></div>
+                    </div>
+                  )}
+                </div>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        {/* Logout Button */}
-        <div className="mb-4">
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={handleLogout} className="w-full text-red-600 hover:text-red-700 hover:bg-red-50">
-                <LogOut className="w-5 h-5" />
-                <span>Logout</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </div>
-        
+      <SidebarFooter className="p-4 px-6">
         {/* Bottom Logo */}
-        <div className="flex justify-center">
-          <div className="w-12 h-12 bg-[#3E4128] rounded-lg flex items-center justify-center">
-            <span className="text-white font-serif font-bold text-xl">M</span>
-          </div>
+        <div className="flex justify-start">
+          <span className="text-[#3E4128] font-serif font-bold text-4xl underline decoration-[#3E4128] decoration-2 underline-offset-4">
+            M
+          </span>
         </div>
       </SidebarFooter>
     </Sidebar>

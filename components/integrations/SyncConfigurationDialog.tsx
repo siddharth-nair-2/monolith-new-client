@@ -21,6 +21,7 @@ import {
   AlertCircle,
   CheckCircle
 } from 'lucide-react';
+import Image from 'next/image';
 import { clientApiRequestJson } from '@/lib/client-api';
 import { toast } from 'sonner';
 
@@ -96,11 +97,23 @@ const mimeTypeLabels: Record<string, string> = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word Documents',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel Spreadsheets',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint Presentations',
-  'application/vnd.google-apps.document': 'Google Docs (🚀 Enhanced)',
-  'application/vnd.google-apps.spreadsheet': 'Google Sheets (🚀 Enhanced)',
-  'application/vnd.google-apps.presentation': 'Google Slides (🚀 Enhanced)',
+  'application/vnd.google-apps.document': 'Google Docs',
+  'application/vnd.google-apps.spreadsheet': 'Google Sheets',
+  'application/vnd.google-apps.presentation': 'Google Slides',
   'text/plain': 'Text Files',
   'text/markdown': 'Markdown Files'
+};
+
+const mimeTypeIcons: Record<string, string> = {
+  'application/pdf': '/icons/filetypes/pdf.svg',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/icons/filetypes/doc.svg',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '/icons/filetypes/xls.svg',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '/icons/filetypes/ppt.svg',
+  'application/vnd.google-apps.document': '/icons/filetypes/doc.svg',
+  'application/vnd.google-apps.spreadsheet': '/icons/filetypes/xls.svg',
+  'application/vnd.google-apps.presentation': '/icons/filetypes/ppt.svg',
+  'text/plain': '/icons/filetypes/txt.svg',
+  'text/markdown': '/icons/filetypes/file.svg'
 };
 
 export default function SyncConfigurationDialog({ connections, onClose, onSyncCreated }: SyncConfigurationDialogProps) {
@@ -306,7 +319,7 @@ export default function SyncConfigurationDialog({ connections, onClose, onSyncCr
         <h3 className="text-lg font-medium mb-4">File Type Filters</h3>
         <div className="grid grid-cols-1 gap-3">
           {defaultMimeTypes.map((mimeType) => (
-            <div key={mimeType} className="flex items-center justify-between p-3 border rounded-lg">
+            <div key={mimeType} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -314,13 +327,15 @@ export default function SyncConfigurationDialog({ connections, onClose, onSyncCr
                   onChange={() => handleMimeTypeToggle(mimeType)}
                   className="w-4 h-4 text-[#A3BC02] rounded focus:ring-[#A3BC02]"
                 />
-                <span className="text-sm">{mimeTypeLabels[mimeType]}</span>
+                <Image 
+                  src={mimeTypeIcons[mimeType] || '/icons/filetypes/file.svg'}
+                  alt={mimeTypeLabels[mimeType]}
+                  width={32}
+                  height={32}
+                  className="flex-shrink-0"
+                />
+                <span className="text-sm font-medium">{mimeTypeLabels[mimeType]}</span>
               </div>
-              {mimeType.startsWith('application/vnd.google-apps.') && (
-                <Badge variant="outline" className="text-xs border-green-500 text-green-700">
-                  Enhanced Processing
-                </Badge>
-              )}
             </div>
           ))}
         </div>
@@ -402,7 +417,7 @@ export default function SyncConfigurationDialog({ connections, onClose, onSyncCr
             <div className="space-y-1">
               <Label>Incremental Sync</Label>
               <p className="text-sm text-gray-500">
-                Only processes files that have changed since last sync (recommended)
+                Only processes files that have changed since last sync
               </p>
             </div>
             <Switch
@@ -418,9 +433,9 @@ export default function SyncConfigurationDialog({ connections, onClose, onSyncCr
 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label>Enhanced Google Workspace Processing</Label>
+              <Label>Google Workspace Processing</Label>
               <p className="text-sm text-gray-500">
-                Uses native APIs for better structure preservation (recommended)
+                Uses native APIs for better structure preservation
               </p>
             </div>
             <Switch
@@ -438,7 +453,7 @@ export default function SyncConfigurationDialog({ connections, onClose, onSyncCr
             <Label>Processing Strategy</Label>
             <div className="space-y-2">
               {[
-                { value: 'hybrid', label: 'Hybrid (Recommended)', desc: 'Uses native APIs when available, falls back to export' },
+                { value: 'hybrid', label: 'Hybrid', desc: 'Uses native APIs when available, falls back to export' },
                 { value: 'native_only', label: 'Native APIs Only', desc: 'Only processes files with native API support' },
                 { value: 'export_only', label: 'Export-based Only', desc: 'Uses traditional export-based processing' }
               ].map((strategy) => (

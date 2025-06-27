@@ -45,7 +45,7 @@ export async function apiRequest(
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           path: "/",
-          maxAge: process.env.NODE_ENV === "development" ? 30 : 60 * 60, // 30 seconds in dev, 1 hour in prod
+          maxAge: 60 * 60, // 1 hour for access token
         });
 
         cookieStore.set("refresh_token", new_refresh_token, {

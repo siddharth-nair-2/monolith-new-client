@@ -49,9 +49,20 @@ import {
   File,
   Paperclip,
   Sparkles,
+  Trash2,
 } from "lucide-react";
 import { format, formatDistanceToNowStrict } from "date-fns";
 import type { DateRange } from "react-day-picker";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { DocumentViewer } from "@/components/document/DocumentViewer";
+import { FileUploadDialog } from "@/components/upload/FileUploadDialog";
+import { toast } from "sonner";
+import { clientApiRequestJson } from "@/lib/client-api";
 
 // Document interface based on API response
 interface Document {
@@ -225,6 +236,13 @@ function DocumentsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   
+  // Document viewer state
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  
+  // Upload dialog state
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  
   // Debounce search query
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   
@@ -267,13 +285,15 @@ function DocumentsPage() {
         params.append("created_before", dateRange.to.toISOString());
       }
       
-      const response = await fetch(`/api/documents?${params.toString()}`);
+      const { data, error } = await clientApiRequestJson<DocumentsResponse>(`/api/documents?${params.toString()}`);
       
-      if (!response.ok) {
-        throw new Error("Failed to fetch documents");
+      if (error) {
+        throw new Error(error.message || "Failed to fetch documents");
       }
       
-      const data: DocumentsResponse = await response.json();
+      if (!data) {
+        throw new Error("No data received");
+      }
       setDocuments(data.items);
       setTotalDocuments(data.total);
       setHasMore(data.has_more);
@@ -294,6 +314,52 @@ function DocumentsPage() {
     setPage(1);
   }, [debouncedSearchQuery, selectedSourceTypes, selectedStatuses, dateRange, sortBy, sortOrder]);
 
+  // Document action handlers
+  const handleViewDocument = (doc: Document) => {
+    setViewingDocument(doc);
+    setIsViewerOpen(true);
+  };
+
+  const handleDownloadDocument = (doc: Document) => {
+    window.open(`/api/documents/${doc.id}/download`, "_blank");
+    toast.success(`Downloading ${doc.name}`);
+  };
+
+  const handleBookmarkDocument = (doc: Document) => {
+    // TODO: Implement bookmark functionality when API is ready
+    toast.info("Bookmark feature coming soon!");
+  };
+
+  const handleDeleteDocument = async (doc: Document) => {
+    if (!confirm(`Are you sure you want to delete "${doc.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const { error } = await clientApiRequestJson(`/api/documents/${doc.id}`, {
+        method: "DELETE",
+      });
+
+      if (error) {
+        throw new Error(error.message || "Failed to delete document");
+      }
+
+      // Remove document from the local state
+      setDocuments(prev => prev.filter(d => d.id !== doc.id));
+      setTotalDocuments(prev => prev - 1);
+      
+      toast.success(`Successfully deleted "${doc.name}"`);
+    } catch (error: any) {
+      console.error("Error deleting document:", error);
+      toast.error(error.message || "Failed to delete document");
+    }
+  };
+
+  const handleUploadComplete = (files: any[]) => {
+    toast.success(`Successfully uploaded ${files.length} file(s)`);
+    // Refresh the documents list
+    fetchDocuments();
+  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
@@ -440,7 +506,10 @@ function DocumentsPage() {
                     {viewMode === "grid" ? "List" : "Grid"}
                   </span>
                 </Button>
-                <Button className="bg-[#A3BC02] hover:bg-[#8BA000] text-white shadow-lg shadow-[#A3BC02]/25 h-10">
+                <Button 
+                  onClick={() => setIsUploadOpen(true)}
+                  className="bg-[#A3BC02] hover:bg-[#8BA000] text-white shadow-lg shadow-[#A3BC02]/25 h-10"
+                >
                   <Upload className="w-4 h-4 mr-0 sm:mr-2" />
                   <span className="hidden sm:inline">Upload</span>
                 </Button>
@@ -728,7 +797,10 @@ function DocumentsPage() {
                   <X className="w-4 h-4 mr-2" /> Clear All Filters
                 </Button>
               ) : (
-                <Button className="bg-[#A3BC02] hover:bg-[#8BA000] text-white shadow-md">
+                <Button 
+                  onClick={() => setIsUploadOpen(true)}
+                  className="bg-[#A3BC02] hover:bg-[#8BA000] text-white shadow-md"
+                >
                   <Upload className="w-4 h-4 mr-2" /> Upload Documents
                 </Button>
               )}
@@ -781,6 +853,7 @@ function DocumentsPage() {
                               <Button
                                 variant="ghost"
                                 className="w-full justify-start text-sm h-9"
+                                onClick={() => handleViewDocument(doc)}
                               >
                                 <Eye className="w-4 h-4 mr-2" />
                                 View
@@ -788,6 +861,7 @@ function DocumentsPage() {
                               <Button
                                 variant="ghost"
                                 className="w-full justify-start text-sm h-9"
+                                onClick={() => handleDownloadDocument(doc)}
                               >
                                 <Download className="w-4 h-4 mr-2" />
                                 Download
@@ -795,9 +869,18 @@ function DocumentsPage() {
                               <Button
                                 variant="ghost"
                                 className="w-full justify-start text-sm h-9"
+                                onClick={() => handleBookmarkDocument(doc)}
                               >
                                 <Star className="w-4 h-4 mr-2" />
                                 Bookmark
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                className="w-full justify-start text-sm h-9 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleDeleteDocument(doc)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete
                               </Button>
                             </PopoverContent>
                           </Popover>
@@ -883,6 +966,7 @@ function DocumentsPage() {
                                 <Button
                                   variant="ghost"
                                   className="w-full justify-start text-sm h-9"
+                                  onClick={() => handleViewDocument(doc)}
                                 >
                                   <Eye className="w-4 h-4 mr-2" />
                                   View
@@ -890,6 +974,7 @@ function DocumentsPage() {
                                 <Button
                                   variant="ghost"
                                   className="w-full justify-start text-sm h-9"
+                                  onClick={() => handleDownloadDocument(doc)}
                                 >
                                   <Download className="w-4 h-4 mr-2" />
                                   Download
@@ -897,9 +982,18 @@ function DocumentsPage() {
                                 <Button
                                   variant="ghost"
                                   className="w-full justify-start text-sm h-9"
+                                  onClick={() => handleBookmarkDocument(doc)}
                                 >
                                   <Star className="w-4 h-4 mr-2" />
                                   Bookmark
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  className="w-full justify-start text-sm h-9 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => handleDeleteDocument(doc)}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete
                                 </Button>
                               </PopoverContent>
                             </Popover>
@@ -961,6 +1055,34 @@ function DocumentsPage() {
           )}
         </main>
       </div>
+      
+      {/* Document Viewer Dialog */}
+      <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] w-full h-full p-0 overflow-hidden">
+          <DialogTitle className="sr-only">
+            {viewingDocument ? `Viewing ${viewingDocument.name}` : 'Document Viewer'}
+          </DialogTitle>
+          {viewingDocument && (
+            <DocumentViewer
+              documentId={viewingDocument.id}
+              documentName={viewingDocument.name}
+              fileType={viewingDocument.extension || undefined}
+              className="h-full"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Dialog */}
+      <FileUploadDialog
+        open={isUploadOpen}
+        onOpenChange={setIsUploadOpen}
+        onUploadComplete={handleUploadComplete}
+        title="Upload Documents"
+        description="Upload your documents to start analyzing them with AI. We support PDF, Word, Excel, and more."
+        maxFiles={10}
+        maxSize={10 * 1024 * 1024} // 10MB
+      />
     </div>
   );
 }

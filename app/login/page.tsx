@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +28,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/dashboard";
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,28 +52,34 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const responseData = await response.json();
-
-      if (response.ok && responseData.success) {
-        // Redirect to dashboard or the intended page
+      // Use the auth context login method
+      await login(data.email, data.password);
+      
+      // The auth context handles navigation, but we can override with redirect
+      if (redirectTo !== "/dashboard") {
         router.push(redirectTo);
-      } else {
-        // Show the exact error from backend
-        setErrorStatusCode(responseData.statusCode || response.status);
-        setError("root", {
-          message: responseData.message || "Invalid email or password",
-        });
-        setIsLoading(false);
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Handle different error types from auth context
+      let errorMessage = "Invalid email or password";
+      let statusCode = 401;
+      
+      if (error.message?.includes("Too many")) {
+        errorMessage = error.message;
+        statusCode = 429;
+      } else if (error.message?.includes("disabled")) {
+        errorMessage = error.message;
+        statusCode = 403;
+      } else if (error.message?.includes("connect")) {
+        errorMessage = "Unable to connect to server. Please try again.";
+        statusCode = 500;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setErrorStatusCode(statusCode);
       setError("root", {
-        message: "Unable to connect to server. Please try again.",
+        message: errorMessage,
       });
       setIsLoading(false);
     }

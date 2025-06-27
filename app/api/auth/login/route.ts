@@ -108,7 +108,7 @@ export async function POST(request: Request) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 30 * 24 * 60 * 60, // 30 days (match refresh token)
+        maxAge: 60 * 60, // 1 hour for access token
       });
 
       // Store refresh token
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: 30 * 24 * 60 * 60, // 30 days for refresh token
       });
     } else if (backendData.token) {
       // Fallback for old backend format

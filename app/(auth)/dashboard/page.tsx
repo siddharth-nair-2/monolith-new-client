@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Paperclip, Clock, ArrowRight, FileText } from "lucide-react";
+import { clientApiRequestJson } from "@/lib/client-api";
 
 // Mock data
 const mockRecentSearches = [
@@ -32,7 +33,7 @@ function SearchSection() {
 
     setIsSearching(true);
     try {
-      const response = await fetch("/api/search/full", {
+      const { data, error } = await clientApiRequestJson("/api/search/full", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -44,17 +45,11 @@ function SearchSection() {
         }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setInstantResults(data.results || []);
-      } else if (response.status === 401) {
-        // Handle authentication error
-        console.warn("Authentication failed for search");
+      if (error) {
+        console.error("Search failed:", error.message || "Unknown error");
         setInstantResults([]);
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Search failed:", errorData.error || "Unknown error");
-        setInstantResults([]);
+        setInstantResults(data?.results || []);
       }
     } catch (error) {
       console.error("Instant search failed:", error);
@@ -76,7 +71,6 @@ function SearchSection() {
   const handleSubmit = () => {
     const query = searchQuery.trim();
     if (query) {
-      console.log("Searching for:", query);
       // Handle search submission here
     }
   };

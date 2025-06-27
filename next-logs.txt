@@ -1,0 +1,467 @@
+
+> monolith-frontend@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.2.4
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.2.58:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 1354ms
+ ✓ Compiled /middleware in 100ms (102 modules)
+ ○ Compiling /login ...
+ ✓ Compiled /login in 2.3s (1604 modules)
+ ✓ Compiled in 409ms (760 modules)
+ GET /login 200 in 2694ms
+ GET /login 200 in 62ms
+ GET /login 200 in 32ms
+ GET /login 200 in 31ms
+ GET /login 200 in 42ms
+ GET /login 200 in 47ms
+ GET /login 200 in 39ms
+ GET /login 200 in 8ms
+ GET /login 200 in 31ms
+ GET /login 200 in 36ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 47ms
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 624ms (1919 modules)
+ ⨯ [Error: aborted]
+ GET /login 200 in 397ms
+ GET /login 200 in 41ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 57ms
+ GET /login 200 in 45ms
+ GET /login 200 in 32ms
+ GET /login 200 in 32ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 37ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 41ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 31ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 36ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 30ms
+ GET /login 200 in 39ms
+ GET /login 200 in 26ms
+ GET /login 200 in 31ms
+ GET /login 200 in 30ms
+ GET /login 200 in 39ms
+ GET /login 200 in 25ms
+ GET /login 200 in 19ms
+ GET /login 200 in 35ms
+ GET /login 200 in 92ms
+ GET /login 200 in 31ms
+ GET /login 200 in 43ms
+ GET /login 200 in 29ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 37ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 29ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 51ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 39ms
+ GET /login 200 in 28ms
+ GET /login 200 in 27ms
+ GET /login 200 in 25ms
+ GET /login 200 in 25ms
+ GET /login 200 in 27ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 28ms
+ GET /login 200 in 57ms
+ GET /login 200 in 31ms
+ GET /login 200 in 31ms
+ GET /login 200 in 30ms
+ GET /login 200 in 30ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 66ms
+ GET /login 200 in 34ms
+ GET /login 200 in 30ms
+ GET /login 200 in 30ms
+ GET /login 200 in 30ms
+ GET /login 200 in 27ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 32ms
+ GET /login 200 in 39ms
+ GET /login 200 in 26ms
+ GET /login 200 in 40ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 40ms
+ GET /login 200 in 49ms
+ GET /login 200 in 29ms
+ GET /login 200 in 26ms
+ GET /login 200 in 33ms
+ GET /login 200 in 32ms
+ GET /login 200 in 34ms
+ GET /login 200 in 41ms
+ GET /login 200 in 29ms
+ GET /login 200 in 33ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 32ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 45ms
+ GET /login 200 in 41ms
+ GET /login 200 in 32ms
+ GET /login 200 in 36ms
+ GET /login 200 in 26ms
+ GET /login 200 in 25ms
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 53ms
+ GET /login 200 in 32ms
+ GET /login 200 in 37ms
+ GET /login 200 in 37ms
+ GET /login 200 in 28ms
+ GET /login 200 in 29ms
+ GET /login 200 in 31ms
+ GET /login 200 in 29ms
+ GET /login 200 in 32ms
+ GET /login 200 in 59ms
+ GET /login 200 in 28ms
+ GET /login 200 in 31ms
+ GET /login 200 in 29ms
+ GET /login 200 in 28ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 28ms
+ GET /login 200 in 36ms
+ GET /login 200 in 30ms
+ GET /login 200 in 33ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 30ms
+ GET /login 200 in 34ms
+ GET /login 200 in 33ms
+ GET /login 200 in 30ms
+ GET /login 200 in 29ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 31ms
+ GET /login 200 in 29ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 28ms
+ GET /login 200 in 29ms
+ GET /login 200 in 31ms
+ ✓ Compiled in 267ms (1933 modules)
+ ✓ Compiled in 262ms (1933 modules)
+ ✓ Compiled in 224ms (1933 modules)
+ GET /login 200 in 216ms
+ GET /login 200 in 55ms
+ GET /login 200 in 39ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 67ms
+ GET /login 200 in 54ms
+ GET /login 200 in 34ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 34ms
+ GET /login 200 in 11ms
+ GET /login 200 in 29ms
+ GET /login 200 in 24ms
+ GET /login 200 in 66ms
+ GET /login 200 in 35ms
+ GET /login 200 in 14ms
+ GET /login 200 in 25ms
+ GET /login 200 in 28ms
+ GET /login 200 in 35ms
+ GET /login 200 in 31ms
+ GET /login 200 in 30ms
+ GET /login 200 in 38ms
+ GET /login 200 in 33ms
+ GET /login 200 in 31ms
+ GET /login 200 in 38ms
+ GET /login 200 in 29ms
+ GET /login 200 in 28ms
+ GET /login 200 in 27ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 36ms
+ GET /login 200 in 42ms
+ GET /login 200 in 31ms
+ GET /login 200 in 49ms
+ GET /login 200 in 32ms
+ GET /login 200 in 30ms
+ GET /login 200 in 32ms
+ GET /login 200 in 33ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 37ms
+ GET /login 200 in 33ms
+ GET /login 200 in 28ms
+ GET /login 200 in 23ms
+ GET /login 200 in 27ms
+ GET /login 200 in 38ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 33ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 57ms
+ GET /login 200 in 37ms
+ GET /login 200 in 30ms
+ GET /login 200 in 31ms
+ GET /login 200 in 29ms
+ GET /login 200 in 27ms
+ GET /login 200 in 47ms
+ GET /login 200 in 26ms
+ GET /login 200 in 31ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 31ms
+ GET /login 200 in 25ms
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 30ms
+ GET /login 200 in 38ms
+ GET /login 200 in 32ms
+ GET /login 200 in 31ms
+ GET /login 200 in 30ms
+ GET /login 200 in 34ms
+ GET /login 200 in 40ms
+ GET /login 200 in 31ms
+ GET /login 200 in 23ms
+ GET /login 200 in 58ms
+ GET /login 200 in 26ms
+ GET /login 200 in 22ms
+ GET /login 200 in 24ms
+ GET /login 200 in 29ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 32ms
+ GET /login 200 in 32ms
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 30ms
+ GET /login 200 in 31ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 32ms
+ GET /login 200 in 44ms
+ GET /login 200 in 36ms
+ GET /login 200 in 26ms
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 31ms
+ GET /login 200 in 28ms
+ GET /login 200 in 24ms
+ GET /login 200 in 25ms
+ GET /login 200 in 28ms
+ GET /login 200 in 33ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 53ms
+ GET /login 200 in 33ms
+ GET /login 200 in 30ms
+ GET /login 200 in 75ms
+ GET /login 200 in 33ms
+ GET /login 200 in 44ms
+ GET /login 200 in 30ms
+ GET /login 200 in 31ms
+ GET /login 200 in 33ms
+ GET /login 200 in 31ms
+ GET /login 200 in 30ms
+ GET /login 200 in 31ms
+ GET /login 200 in 31ms
+ GET /login 200 in 27ms
+ GET /login 200 in 26ms
+ GET /login 200 in 44ms
+ GET /login 200 in 26ms
+ GET /login 200 in 26ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 24ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 38ms
+ GET /login 200 in 26ms
+ GET /login 200 in 25ms
+ GET /login 200 in 30ms
+ GET /login 200 in 55ms
+ GET /login 200 in 31ms
+ GET /login 200 in 43ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 45ms
+ GET /login 200 in 43ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 32ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 36ms
+ GET /login 200 in 34ms
+ GET /login 200 in 28ms
+ GET /login 200 in 26ms
+ GET /login 200 in 24ms
+ GET /login 200 in 31ms
+ GET /login 200 in 48ms
+ GET /login 200 in 22ms
+ GET /login 200 in 48ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 26ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 44ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 35ms
+ GET /login 200 in 23ms
+ GET /login 200 in 37ms
+ GET /login 200 in 25ms
+ GET /login 200 in 41ms
+ GET /login 200 in 28ms
+ GET /login 200 in 24ms
+ GET /login 200 in 28ms
+ GET /login 200 in 167ms
+ GET /login 200 in 26ms
+ GET /login 200 in 38ms
+ GET /login 200 in 23ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 30ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 27ms
+ GET /login 200 in 39ms
+ GET /login 200 in 24ms
+ GET /login 200 in 37ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 26ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 55ms
+ GET /login 200 in 42ms
+ GET /login 200 in 34ms
+ GET /login 200 in 40ms
+ GET /login 200 in 33ms
+ GET /login 200 in 40ms
+ GET /login 200 in 30ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 43ms
+ GET /login 200 in 27ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 27ms
+ GET /login 200 in 35ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 38ms
+ GET /login 200 in 27ms
+ GET /login 200 in 30ms
+ GET /login 200 in 30ms
+ GET /login 200 in 32ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 44ms
+ GET /login 200 in 35ms
+ GET /login 200 in 43ms
+ GET /login 200 in 28ms
+ GET /login 200 in 72ms
+ GET /login 200 in 31ms
+ GET /login 200 in 33ms
+ GET /login 200 in 28ms
+ GET /login 200 in 35ms
+ GET /login 200 in 27ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 48ms
+ GET /login 200 in 28ms
+ GET /login 200 in 45ms
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 30ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 30ms
+ GET /login 200 in 30ms
+ GET /login 200 in 26ms
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 34ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 33ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 35ms
+ GET /login 200 in 34ms
+ GET /login 200 in 57ms
+ GET /login 200 in 31ms
+ GET /login 200 in 37ms
+ GET /login 200 in 29ms
+ GET /login 200 in 40ms
+ GET /login 200 in 26ms
+ GET /login 200 in 26ms
+ GET /login 200 in 27ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 25ms
+ GET /login 200 in 31ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 26ms
+ GET /login 200 in 24ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 37ms
+ GET /login 200 in 22ms
+ GET /login 200 in 33ms
+ GET /login 200 in 24ms
+ GET /login 200 in 27ms
+ GET /login 200 in 22ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 30ms
+ GET /login 200 in 28ms
+ GET /login 200 in 61ms
+ GET /login 200 in 26ms
+ GET /login 200 in 41ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 30ms
+ GET /login 200 in 29ms
+ GET /login 200 in 34ms
+ GET /login 200 in 28ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 30ms
+ GET /login 200 in 23ms
+ GET /login 200 in 25ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 26ms
+ GET /login 200 in 24ms
+ GET /login 200 in 28ms
+[Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException: [Error: aborted] { code: 'ECONNRESET' }
+ ⨯ uncaughtException:  [Error: aborted] { code: 'ECONNRESET' }
+ GET /login 200 in 27ms
+ GET /login 200 in 54ms
+ GET /login 200 in 24ms
+ GET /login 200 in 26ms
+ GET /login 200 in 41ms
+ GET /login 200 in 25ms
+ GET /login 200 in 35ms
+ GET /login 200 in 28ms
+ GET /login 200 in 29ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 26ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 35ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 31ms
+ ⨯ [Error: aborted]
+ GET /login 200 in 26ms
+ GET /login 200 in 52ms
+ GET /login 200 in 26ms
+ GET /login 200 in 24ms
+ GET /login 200 in 34ms
+ GET /login 200 in 25ms
+ GET /login 200 in 28ms
+ GET /login 200 in 27ms
+ GET /login 200 in 53ms
+[?25h

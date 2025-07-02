@@ -25,6 +25,8 @@ import {
   Clock,
   History,
   Square,
+  Target,
+  Plus,
 } from "lucide-react";
 
 interface CurrentUser {
@@ -39,37 +41,40 @@ interface CurrentUser {
   };
 }
 
-// Mock data
-const mockFocusSpaces = [
-  {
-    id: "1",
-    name: "Acme Client",
-    icon: "🏢",
-  },
-  {
-    id: "2",
-    name: "2025 HR Onboard",
-    icon: "📄",
-  },
-  {
-    id: "3",
-    name: "Marketing for Croma",
-    icon: "🏆",
-  },
-];
+interface FocusMode {
+  id: string;
+  name: string;
+  icon: string;
+  document_count: number;
+}
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [focusModes, setFocusModes] = useState<FocusMode[]>([]);
 
   const isActive = (path: string) => pathname === path;
+  const isFocusActive = (focusId: string) => pathname === `/focus/${focusId}`;
+
+  const loadFocusModes = async () => {
+    try {
+      const response = await fetch("/api/focus-modes");
+      if (response.ok) {
+        const data = await response.json();
+        setFocusModes(data.focus_modes?.slice(0, 5) || []); // Show max 5 in sidebar
+      }
+    } catch (error) {
+      console.error("Failed to load focus modes:", error);
+    }
+  };
 
 
-  // Set loading to false when user is available
+  // Set loading to false when user is available and load focus modes
   useEffect(() => {
     if (user !== null) {
       setIsLoading(false);
+      loadFocusModes();
     }
   }, [user]);
 
@@ -119,18 +124,6 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/search")}
-                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
-                >
-                  <Link href="/search">
-                    <Search className="w-5 h-5" />
-                    <span>Search</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -140,30 +133,6 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-gray-600">Library</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/saved")}
-                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
-                >
-                  <Link href="/saved">
-                    <Bookmark className="w-5 h-5" />
-                    <span>Saved</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive("/recents")}
-                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
-                >
-                  <Link href="/recents">
-                    <Clock className="w-5 h-5" />
-                    <span>Recent</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
@@ -184,32 +153,67 @@ export function AppSidebar() {
 
         {/* Focus Spaces */}
         <SidebarGroup className="mt-auto">
-          <SidebarGroupLabel className="flex items-center gap-2 text-gray-600 pb-4 text-md">
-            <Square className="w-4 h-4" />
-            <span>Focus Spaces</span>
+          <SidebarGroupLabel className="flex items-center justify-between text-gray-600 pb-4 text-md">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              <span>Focus Spaces</span>
+            </div>
+            <Link href="/focus" className="hover:bg-[#A3BC02]/10 rounded p-1">
+              <Plus className="w-3 h-3" />
+            </Link>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mockFocusSpaces.map((space, index) => (
-                <div key={space.id}>
+              {/* View All Focus Modes Link */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive("/focus")}
+                  className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors text-sm text-gray-600"
+                >
+                  <Link href="/focus">
+                    <Square className="w-4 h-4" />
+                    <span>View All</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              
+              {/* Recent Focus Modes */}
+              {focusModes.map((focusMode, index) => (
+                <div key={focusMode.id}>
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
+                      isActive={isFocusActive(focusMode.id)}
                       className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
                     >
-                      <Link href={`/dashboard/spaces/${space.id}`}>
-                        <span className="text-lg text-custom-dark-green">{space.icon}</span>
-                        <span>{space.name}</span>
+                      <Link href={`/focus/${focusMode.id}`}>
+                        <span className="text-lg text-custom-dark-green">{focusMode.icon}</span>
+                        <span className="truncate">{focusMode.name}</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
-                  {index < mockFocusSpaces.length - 1 && (
+                  {index < focusModes.length - 1 && (
                     <div className="mx-2 my-1">
                       <div className="border-b border-gray-300/70"></div>
                     </div>
                   )}
                 </div>
               ))}
+              
+              {focusModes.length === 0 && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors text-sm text-gray-500"
+                  >
+                    <Link href="/focus">
+                      <Plus className="w-4 h-4" />
+                      <span>Create your first focus space</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

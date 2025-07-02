@@ -20,7 +20,7 @@ const toc = [
 
 export default function PrivacyPolicyPage() {
   return (
-    <div className="min-h-dvh bg-white">
+    <div className="min-h-dvh">
       <Header />
 
       <main className="pt-24 pb-16">

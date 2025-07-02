@@ -20,7 +20,7 @@ function AuthenticatedLayoutContent({
 }) {
   return (
     <SidebarProvider>
-      <div className="h-screen bg-gradient-to-br from-white via-[#fafbf9] to-[#f0f7e8] flex w-full">
+      <div className="h-screen flex w-full">
         <AppSidebar />
         <SidebarInset className="flex-1 flex flex-col relative">
           <DashboardHeader />

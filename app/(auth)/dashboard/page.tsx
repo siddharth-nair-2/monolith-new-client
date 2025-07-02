@@ -4,8 +4,17 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Paperclip, Clock, ArrowRight, FileText } from "lucide-react";
+import {
+  Search,
+  Paperclip,
+  Clock,
+  ArrowRight,
+  FileText,
+  Filter,
+} from "lucide-react";
 import { clientApiRequestJson } from "@/lib/client-api";
+import { useIntegrations } from "@/lib/integrations-context";
+import Image from "next/image";
 
 // Mock data
 const mockRecentSearches = [
@@ -22,6 +31,10 @@ function SearchSection() {
     Array<Record<string, any>>
   >([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedIntegrations, setSelectedIntegrations] = useState<string[]>(
+    []
+  );
+  const { isGoogleDriveConnected } = useIntegrations();
 
   // Debounced instant search function
   const performInstantSearch = useCallback(async (query: string) => {
@@ -73,6 +86,14 @@ function SearchSection() {
     if (query) {
       // Handle search submission here
     }
+  };
+
+  const toggleIntegration = (integration: string) => {
+    setSelectedIntegrations((prev) =>
+      prev.includes(integration)
+        ? prev.filter((i) => i !== integration)
+        : [...prev, integration]
+    );
   };
 
   return (
@@ -220,6 +241,43 @@ function SearchSection() {
             <Paperclip className="w-5 h-5 text-gray-600" strokeWidth={2.2} />
           </Button>
         </motion.div>
+
+        {/* Filter Section - Only show if connected to integrations */}
+        {isGoogleDriveConnected && (
+          <motion.div
+            className="flex flex-col items-center gap-3 mt-16"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Filter className="w-4 h-4" />
+              <span>Filter</span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Google Drive Toggle */}
+              <button
+                onClick={() => toggleIntegration("google_drive")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${
+                  selectedIntegrations.includes("google_drive")
+                    ? "bg-white border-[#FCCD48] text-gray-900 [box-shadow:inset_0_0_25px_0_rgba(252,205,72,0.3)]"
+                    : "bg-white border-gray-100 text-gray-600 hover:border-[#FCCD48] [box-shadow:inset_0_0_10px_0_rgba(252,205,72,0.4)]"
+                }`}
+              >
+                <Image
+                  src="/icons/integrations/google_drive.svg"
+                  alt="Google Drive"
+                  width={16}
+                  height={16}
+                />
+                <span className="text-sm font-medium">Google Drive</span>
+              </button>
+
+              {/* Future integrations can be added here in the same pattern */}
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </div>
   );

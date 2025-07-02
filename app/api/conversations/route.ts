@@ -7,8 +7,14 @@ export async function GET(request: Request) {
     const page = searchParams.get("page") || "1";
     const pageSize = searchParams.get("page_size") || "20";
     const includeArchived = searchParams.get("include_archived") === "true";
+    const focusModeId = searchParams.get("focus_mode_id");
 
-    const response = await backendApiRequest(`/api/v1/conversations/?page=${page}&page_size=${pageSize}&include_archived=${includeArchived}`, {
+    let queryParams = `page=${page}&page_size=${pageSize}&include_archived=${includeArchived}`;
+    if (focusModeId) {
+      queryParams += `&focus_mode_id=${focusModeId}`;
+    }
+
+    const response = await backendApiRequest(`/api/v1/conversations/?${queryParams}`, {
       method: "GET",
     });
 

@@ -666,16 +666,16 @@ export default function SyncPipelineSidebar({
             onClick={() => setIncludeSubfolders(!includeSubfolders)}
             className="flex items-center justify-center"
           >
-            <Square 
+            <Square
               className={`w-4 h-4 transition-colors ${
-                includeSubfolders 
-                  ? 'fill-[#A3BC02] text-[#A3BC02]' 
-                  : 'text-[#A3BC02]'
-              }`} 
+                includeSubfolders
+                  ? "fill-[#A3BC02] text-[#A3BC02]"
+                  : "text-[#A3BC02]"
+              }`}
             />
           </button>
-          <Label 
-            htmlFor="include-subfolders" 
+          <Label
+            htmlFor="include-subfolders"
             className="text-sm font-medium text-custom-dark-green cursor-pointer"
             onClick={() => setIncludeSubfolders(!includeSubfolders)}
           >
@@ -718,7 +718,9 @@ export default function SyncPipelineSidebar({
                         ? "bg-[#A3BC02] border-[#A3BC02]"
                         : "border-gray-300 hover:border-[#A3BC02]"
                     } ${syncEntireDrive ? "cursor-not-allowed" : ""}`}
-                    onClick={() => !syncEntireDrive && toggleFolderSelection(folder.id)}
+                    onClick={() =>
+                      !syncEntireDrive && toggleFolderSelection(folder.id)
+                    }
                   >
                     {selectedFolders.has(folder.id) && (
                       <Check className="w-3 h-3 text-white absolute top-0.5 left-0.5" />
@@ -735,13 +737,16 @@ export default function SyncPipelineSidebar({
                     className={`flex-1 min-w-0 ${
                       syncEntireDrive ? "cursor-not-allowed" : "cursor-pointer"
                     }`}
-                    onClick={() => !syncEntireDrive && toggleFolderSelection(folder.id)}
+                    onClick={() =>
+                      !syncEntireDrive && toggleFolderSelection(folder.id)
+                    }
                   >
                     <p className="font-medium text-custom-dark-green truncate">
                       {folder.name}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Modified {new Date(folder.modified_time).toLocaleDateString()}
+                      Modified{" "}
+                      {new Date(folder.modified_time).toLocaleDateString()}
                     </p>
                   </div>
 
@@ -750,7 +755,9 @@ export default function SyncPipelineSidebar({
                     variant="outline"
                     className="text-xs bg-white border-gray-200 text-gray-600"
                   >
-                    {folder.drive_type === "shared_drive" ? "Shared" : "My Drive"}
+                    {folder.drive_type === "shared_drive"
+                      ? "Shared"
+                      : "My Drive"}
                   </Badge>
 
                   {/* Navigate Button */}
@@ -790,11 +797,15 @@ export default function SyncPipelineSidebar({
                       {trimFileName(file.name)}
                     </p>
                     <p className="text-xs text-gray-500">
-                      {formatFileSize(file.size_bytes)} • {new Date(file.modified_time).toLocaleDateString()}
+                      {formatFileSize(file.size_bytes)} •{" "}
+                      {new Date(file.modified_time).toLocaleDateString()}
                     </p>
                   </div>
 
-                  <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs bg-gray-100 text-gray-600"
+                  >
                     Preview
                   </Badge>
                 </div>
@@ -806,8 +817,12 @@ export default function SyncPipelineSidebar({
                   <Folder className="w-8 h-8 text-gray-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">This folder is empty</p>
-                  <p className="text-sm text-gray-500">No folders or files to display</p>
+                  <p className="font-medium text-gray-900">
+                    This folder is empty
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    No folders or files to display
+                  </p>
                 </div>
               </div>
             )}
@@ -834,7 +849,8 @@ export default function SyncPipelineSidebar({
               ) : (
                 <div className="space-y-1">
                   <p className="font-medium text-custom-dark-green">
-                    {selectedFolders.size} folder{selectedFolders.size !== 1 ? "s" : ""} selected
+                    {selectedFolders.size} folder
+                    {selectedFolders.size !== 1 ? "s" : ""} selected
                   </p>
                   {includeSubfolders && (
                     <p className="text-sm text-[#A3BC02]">
@@ -852,16 +868,18 @@ export default function SyncPipelineSidebar({
 
   const renderBasicInfo = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="font-serif font-medium">Basic Information</h3>
-        <Badge variant="outline" className="font-sans">
-          Step 2 of 4
-        </Badge>
+      {/* Header */}
+      <div className="text-left space-y-1 pt-4">
+        <h2 className="font-sans text-xl font-bold text-black">
+          Basic Information
+        </h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="name">Sync Name *</Label>
+          <Label htmlFor="name" className="font-sans text-black/50">
+            Sync Name
+          </Label>
           <Input
             id="name"
             value={config.name}
@@ -869,11 +887,18 @@ export default function SyncPipelineSidebar({
               setConfig((prev) => ({ ...prev, name: e.target.value }))
             }
             placeholder="e.g., Daily Google Drive Sync"
+            className={`rounded-full border-2 font-sans ${
+              !config.name.trim()
+                ? "border-[#A3BC02] focus:border-[#A3BC02] focus:ring-[#A3BC02]/20"
+                : "border-gray-200 focus:border-[#A3BC02] focus:ring-[#A3BC02]/20"
+            }`}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description" className="font-sans text-black/50">
+            Description
+          </Label>
           <Textarea
             id="description"
             value={config.description}
@@ -882,55 +907,49 @@ export default function SyncPipelineSidebar({
             }
             placeholder="Brief description of what this sync includes..."
             rows={3}
+            className="rounded-2xl border-gray-200 focus:border-[#A3BC02] focus:ring-[#A3BC02]/20 font-sans"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="connection">Google Drive Account</Label>
-          <Select
-            value={config.source_connection_id}
-            onValueChange={(value) =>
-              setConfig((prev) => ({ ...prev, source_connection_id: value }))
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a connection" />
-            </SelectTrigger>
-            <SelectContent>
-              {googleDriveConnections.map((connection) => (
-                <SelectItem key={connection.id} value={connection.id}>
-                  <div className="flex items-center gap-2">
-                    <span>{connection.name}</span>
-                    <Badge
-                      variant={
-                        connection.status === "active"
-                          ? "default"
-                          : "destructive"
-                      }
-                    >
-                      {connection.status}
-                    </Badge>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="connection" className="font-sans text-black/50">
+            Account Status
+          </Label>
+          <div className="flex h-10 w-full items-center text-gray-900 border bg-white border-[#A3BC01] rounded-full px-3 py-2 transition duration-200 [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)] font-sans">
+            <div className="flex items-center gap-2 justify-between w-full">
+              <span className="text-gray-900 text-sm">
+                {connection?.name || "Google Drive Connection"}
+              </span>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-[#A3BC02] rounded-full"></div>
+                <span className="text-xs text-gray-600 capitalize">
+                  {connection?.status || "connected"}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="schedule">Sync Schedule</Label>
+          <Label htmlFor="schedule" className="font-sans text-black/50">
+            Sync Schedule
+          </Label>
           <Select
             value={config.sync_schedule}
             onValueChange={(value) =>
               setConfig((prev) => ({ ...prev, sync_schedule: value }))
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="rounded-full border-gray-200 focus:border-[#A3BC02] focus:ring-[#A3BC02]/20 font-sans">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-gray-200">
               {scheduleOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  className="rounded-lg font-sans"
+                >
                   {option.label}
                 </SelectItem>
               ))}
@@ -939,65 +958,63 @@ export default function SyncPipelineSidebar({
         </div>
       </div>
 
-      <div>
-        <h4 className="font-medium mb-3">Selected Folders</h4>
+      <div className="space-y-4 pt-6">
+        <h4 className="font-sans text-lg font-bold text-black">
+          Folder Information
+        </h4>
         {config.filters.folder_ids && config.filters.folder_ids.length > 0 ? (
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-2">
-              {config.filters.folder_ids.length} folder
-              {config.filters.folder_ids.length !== 1 ? "s" : ""} selected for
-              sync
-              {config.filters.include_subfolders && (
-                <span className="text-[#A3BC02] ml-2">
-                  • Subfolders included
-                </span>
-              )}
-            </p>
-            {config.filters.selected_folders &&
-              config.filters.selected_folders.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {config.filters.selected_folders.map((folder, index) => (
-                    <Badge
-                      key={folder.id}
-                      variant="outline"
-                      className="text-xs"
-                    >
-                      <Folder className="w-3 h-3 mr-1" />
-                      {folder.name}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+          <div className="py-2 px-4 text-gray-900 border bg-white border-[#A3BC01] rounded-full transition duration-200 [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)]">
+            <div className="flex items-center justify-between py-1">
+              <p className="font-sans text-sm text-gray-900 font-medium">
+                {config.filters.folder_ids.length} &nbsp; folder
+                {config.filters.folder_ids.length !== 1 ? "s" : ""} selected for
+                sync &nbsp;
+                {config.filters.include_subfolders && (
+                  <span className="font-sans text-xs text-gray-600">
+                    (Including all subfolders)
+                  </span>
+                )}
+              </p>
+              <Image
+                src="/icons/integrations/google_drive.svg"
+                alt="Google Drive"
+                width={16}
+                height={16}
+                className="flex-shrink-0"
+              />
+            </div>
           </div>
         ) : config.filters.sync_entire_drive ? (
-          <div className="p-3 bg-[#A3BC02]/10 border border-[#A3BC02]/20 rounded-lg">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🌟</span>
-              <p className="text-sm text-[#A3BC02] font-medium">
+          <div className="py-2 text-gray-900 border bg-white border-[#A3BC01] rounded-full px-4 transition duration-200 [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)]">
+            <div className="flex items-center justify-between py-1">
+              <p className="font-sans text-sm text-gray-900 font-medium">
                 Entire Google Drive will be synced
               </p>
+              <Image
+                src="/icons/integrations/google_drive.svg"
+                alt="Google Drive"
+                width={16}
+                height={16}
+                className="flex-shrink-0"
+              />
             </div>
           </div>
         ) : (
-          <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-orange-600" />
-              <p className="text-sm text-orange-800">
+          <div className="py-2 px-4 text-gray-900 border bg-white border-[#A3BC01] rounded-full transition duration-200 [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)]">
+            <div className="flex items-center justify-between py-1">
+              <p className="font-sans text-sm text-gray-900 font-medium">
                 No folders selected. Please go back to select folders.
               </p>
+              <Image
+                src="/icons/integrations/google_drive.svg"
+                alt="Google Drive"
+                width={16}
+                height={16}
+                className="flex-shrink-0"
+              />
             </div>
           </div>
         )}
-      </div>
-
-      <div className="flex items-center justify-start pt-4">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentStep("file-browser")}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Folders
-        </Button>
       </div>
     </div>
   );
@@ -1113,13 +1130,6 @@ export default function SyncPipelineSidebar({
             }
           />
         </div>
-      </div>
-
-      <div className="flex items-center justify-start pt-4">
-        <Button variant="outline" onClick={() => setCurrentStep("basic-info")}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Basic Info
-        </Button>
       </div>
     </div>
   );
@@ -1283,16 +1293,6 @@ export default function SyncPipelineSidebar({
           </div>
         </CardContent>
       </Card>
-
-      <div className="flex items-center justify-start pt-4">
-        <Button
-          variant="outline"
-          onClick={() => setCurrentStep("file-filters")}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to File Filters
-        </Button>
-      </div>
     </div>
   );
 
@@ -1347,72 +1347,103 @@ export default function SyncPipelineSidebar({
           {currentStep === "performance" && renderPerformanceOptions()}
         </div>
 
-        {/* Global Next Button */}
+        {/* Global Navigation */}
         <div className="flex justify-between items-center p-4">
           {/* Page Counter */}
           <div className="text-sm text-black/50 font-sans">
             {getStepNumber()}/4
           </div>
 
-          {/* Next Button */}
-          {currentStep === "file-browser" && (
-            <Button
-              onClick={proceedToBasicInfo}
-              disabled={!syncEntireDrive && selectedFolders.size === 0}
-              className="rounded-full bg-[#CFE734] hover:bg-[#A3BC02] text-custom-dark-green flex items-center gap-2"
-            >
-              Next
-              <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
-                <ArrowRight size={1} className=" text-custom-dark-green" />
-              </div>
-            </Button>
-          )}
-          {currentStep === "basic-info" && (
-            <Button
-              onClick={() => setCurrentStep("file-filters")}
-              disabled={!config.name.trim()}
-              className="rounded-full bg-[#A3BC02] hover:bg-[#8BA000] text-custom-dark-green flex items-center gap-2"
-            >
-              Next
-              <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+          {/* Navigation Buttons */}
+          <div className="flex items-center gap-3">
+            {/* Back Button - show for steps 2, 3, 4 */}
+            {currentStep === "basic-info" && (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep("file-browser")}
+                className="rounded-full bg-white hover:bg-gray-50 text-custom-dark-green border-gray-200 flex items-center gap-2"
+              >
+                <div className="w-4 h-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <ArrowLeft className="w-2 h-2 text-custom-dark-green" />
+                </div>
+                Back
+              </Button>
+            )}
+            {currentStep === "file-filters" && (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep("basic-info")}
+                className="rounded-full bg-white hover:bg-gray-50 text-custom-dark-green border-gray-200 flex items-center gap-2"
+              >
+                <div className="w-4 h-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <ArrowLeft className="w-2 h-2 text-custom-dark-green" />
+                </div>
+                Back
+              </Button>
+            )}
+            {currentStep === "performance" && (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep("file-filters")}
+                className="rounded-full bg-white hover:bg-gray-50 text-custom-dark-green border-gray-200 flex items-center gap-2"
+              >
+                <div className="w-4 h-4 bg-gray-100 rounded-full flex items-center justify-center">
+                  <ArrowLeft className="w-2 h-2 text-custom-dark-green" />
+                </div>
+                Back
+              </Button>
+            )}
+
+            {/* Next Button */}
+            {currentStep === "file-browser" && (
+              <Button
+                onClick={proceedToBasicInfo}
+                disabled={!syncEntireDrive && selectedFolders.size === 0}
+                className="rounded-full bg-[#CFE734] hover:bg-[#A3BC02] text-custom-dark-green flex items-center gap-2"
+              >
+                Next
                 <ArrowRight className="w-2 h-2 text-custom-dark-green" />
-              </div>
-            </Button>
-          )}
-          {currentStep === "file-filters" && (
-            <Button
-              onClick={() => setCurrentStep("performance")}
-              className="rounded-full bg-[#A3BC02] hover:bg-[#8BA000] text-custom-dark-green flex items-center gap-2"
-            >
-              Next
-              <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+              </Button>
+            )}
+            {currentStep === "basic-info" && (
+              <Button
+                onClick={() => setCurrentStep("file-filters")}
+                disabled={!config.name.trim()}
+                className="rounded-full bg-[#CFE734] hover:bg-[#A3BC02] text-custom-dark-green flex items-center gap-2"
+              >
+                Next
                 <ArrowRight className="w-2 h-2 text-custom-dark-green" />
-              </div>
-            </Button>
-          )}
-          {currentStep === "performance" && (
-            <Button
-              onClick={createSync}
-              disabled={isCreating || !config.name.trim()}
-              className="rounded-full bg-[#A3BC02] hover:bg-[#8BA000] text-custom-dark-green flex items-center gap-2"
-            >
-              {isCreating ? (
-                <>
-                  Next
-                  <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+              </Button>
+            )}
+            {currentStep === "file-filters" && (
+              <Button
+                onClick={() => setCurrentStep("performance")}
+                className="rounded-full bg-[#CFE734] hover:bg-[#A3BC02] text-custom-dark-green flex items-center gap-2"
+              >
+                Next
+                <ArrowRight className="w-2 h-2 text-custom-dark-green" />
+              </Button>
+            )}
+            {currentStep === "performance" && (
+              <Button
+                onClick={createSync}
+                disabled={isCreating || !config.name.trim()}
+                className="rounded-full bg-[#CFE734] hover:bg-[#A3BC02] text-custom-dark-green flex items-center gap-2"
+              >
+                {isCreating ? (
+                  <>
+                    Create Sync Pipeline
                     <Loader2 className="w-2 h-2 text-custom-dark-green animate-spin" />
-                  </div>
-                </>
-              ) : (
-                <>
-                  Next
-                  <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                  </>
+                ) : (
+                  <>
+                    Create Sync Pipeline
                     <Check className="w-2 h-2 text-custom-dark-green" />
-                  </div>
-                </>
-              )}
-            </Button>
-          )}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </SheetContent>
     </Sheet>

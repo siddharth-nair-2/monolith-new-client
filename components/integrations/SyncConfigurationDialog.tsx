@@ -25,14 +25,19 @@ import Image from 'next/image';
 import { clientApiRequestJson } from '@/lib/client-api';
 import { toast } from 'sonner';
 
-interface GoogleDriveConnection {
+interface Connection {
   id: string;
   name: string;
-  status: 'active' | 'inactive' | 'error';
+  connector_type: string;
+  status: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+  last_sync_at?: string;
 }
 
 interface SyncConfigurationDialogProps {
-  connections: GoogleDriveConnection[];
+  connections: Connection[];
   onClose: () => void;
   onSyncCreated: () => void;
 }

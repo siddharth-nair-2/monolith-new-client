@@ -8,9 +8,18 @@ export async function GET(
   try {
     const { searchParams } = new URL(request.url);
     const includeMessages = searchParams.get("include_messages") === "true";
+    const includeFocusModes = searchParams.get("include_focus_modes") === "true";
+
+    const queryParams = new URLSearchParams();
+    if (includeMessages) {
+      queryParams.append("include_messages", "true");
+    }
+    if (includeFocusModes) {
+      queryParams.append("include_focus_modes", "true");
+    }
 
     const response = await backendApiRequest(
-      `/api/v1/conversations/${params.id}?include_messages=${includeMessages}`,
+      `/api/v1/conversations/${params.id}?${queryParams.toString()}`,
       {
         method: "GET",
       }

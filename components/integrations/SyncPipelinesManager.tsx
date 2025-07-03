@@ -85,7 +85,7 @@ export default function SyncPipelinesManager() {
       return {
         id: sync.source_connection.id,
         name: sync.source_connection.name,
-        connector_type: 'google_drive', // We know it's Google Drive from the API response
+        connector_type: "google_drive", // We know it's Google Drive from the API response
       };
     }
     // Fallback to looking up by source_connection_id if needed
@@ -130,35 +130,19 @@ export default function SyncPipelinesManager() {
   }
 
   // Filter out deleted syncs
-  const activeSyncs = syncs.filter(sync => sync.status !== 'deleted');
+  const activeSyncs = syncs.filter((sync) => sync.status !== "deleted");
 
   if (activeSyncs.length === 0) {
     return (
-      <Card className="border-none">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <Database className="w-8 h-8 text-gray-400" />
-            <span className="font-sans text-lg text-gray-700">
-              Sync Pipelines
-            </span>
-          </CardTitle>
-          <CardDescription className="font-sans">
-            Manage data synchronization across all your connected integrations
-          </CardDescription>
-        </CardHeader>
+      <Card className="border-none rounded-xl">
         <CardContent>
-          <div className="text-center py-12">
-            <Database className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-serif font-medium text-gray-900 mb-2">
-              No Sync Pipelines Yet
-            </h3>
-            <p className="text-gray-500 mb-6 font-sans">
-              Connect an integration above and create your first sync pipeline
-              to automatically keep your documents synchronized and searchable.
-            </p>
-            <p className="text-sm text-gray-400 font-sans">
-              Sync pipelines will appear here once you configure them through
-              your connected integrations.
+          <div className="flex flex-col items-center py-10 space-y-4 text-center">
+            <div className="w-12 h-12 bg-[#A3BC02]/20 rounded-full flex items-center justify-center">
+              <Database className="w-6 h-6 text-[#A3BC02]" />
+            </div>
+            <h3 className="text-lg font-bold text-black">No Sync Pipelines</h3>
+            <p className="text-black/70 text-sm max-w-xs">
+              Connect an integration above to create your first pipeline.
             </p>
           </div>
         </CardContent>
@@ -224,7 +208,9 @@ export default function SyncPipelinesManager() {
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="font-sans">
-                          {runningSync === sync.id ? "Running..." : "Run sync now"}
+                          {runningSync === sync.id
+                            ? "Running..."
+                            : "Run sync now"}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -241,19 +227,21 @@ export default function SyncPipelinesManager() {
                         <MoreVertical className="w-4 h-4" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent 
-                      className="w-48 p-1 bg-white border border-gray-200 shadow-lg" 
+                    <PopoverContent
+                      className="w-48 p-1 bg-white border border-gray-200 shadow-lg"
                       align="end"
                     >
                       <div className="space-y-1">
-                        <button 
+                        <button
                           onClick={() => runSync(sync.id)}
                           className="w-full flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50 transition-colors text-left"
                         >
                           <PlayCircle className="w-4 h-4 text-[#A3BC00]" />
-                          <span className="text-sm font-medium text-gray-700">Run Now</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            Run Now
+                          </span>
                         </button>
-                        
+
                         <button
                           onClick={() => {
                             toast.info(
@@ -263,17 +251,21 @@ export default function SyncPipelinesManager() {
                           className="w-full flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-50 transition-colors text-left"
                         >
                           <Settings className="w-4 h-4 text-gray-600" />
-                          <span className="text-sm font-medium text-gray-700">Edit Settings</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            Edit Settings
+                          </span>
                         </button>
-                        
+
                         <div className="border-t border-gray-100 my-1"></div>
-                        
+
                         <button
                           onClick={() => deleteSync(sync.id)}
                           className="w-full flex items-center gap-2 px-3 py-2 rounded hover:bg-red-50 transition-colors text-left"
                         >
                           <Trash2 className="w-4 h-4 text-red-600" />
-                          <span className="text-sm font-medium text-red-600">Delete Pipeline</span>
+                          <span className="text-sm font-medium text-red-600">
+                            Delete Pipeline
+                          </span>
                         </button>
                       </div>
                     </PopoverContent>

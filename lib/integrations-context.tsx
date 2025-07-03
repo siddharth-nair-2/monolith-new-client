@@ -52,7 +52,7 @@ interface SyncPipeline {
   id: string;
   name: string;
   description?: string;
-  status: "active" | "inactive" | "running";
+  status: "active" | "inactive" | "running" | "deleted";
   source_connection_id?: string; // Keep for backward compatibility
   source_connection?: {
     id: string;

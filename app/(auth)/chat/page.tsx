@@ -98,7 +98,7 @@ export default function ChatPage() {
           id: msg.id,
           role: msg.role,
           content: msg.content,
-          citations: msg.citations || [],
+          citations: msg.metadata?.citations || [],
           timestamp: new Date(msg.created_at),
         }));
 

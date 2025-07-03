@@ -13,12 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Command, CommandItem, CommandList } from "@/components/ui/command";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -44,9 +44,13 @@ import {
   Loader2,
   Search,
   ChevronRight,
+  ChevronDown,
+  CalendarDays,
   Zap,
   AlertCircle,
   Square,
+  CalendarIcon,
+  RefreshCcw,
 } from "lucide-react";
 import Image from "next/image";
 import { useIntegrations } from "@/lib/integrations-context";
@@ -245,6 +249,8 @@ export default function SyncPipelineSidebar({
   });
 
   const [isCreating, setIsCreating] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const connection = googleDriveConnections.find(
     (conn) => conn.id === connectionId
@@ -443,11 +449,22 @@ export default function SyncPipelineSidebar({
 
     setIsCreating(true);
     try {
+      // Ensure backend always receives hardcoded values
+      const finalConfig = {
+        ...config,
+        sync_config: {
+          ...config.sync_config,
+          incremental_sync: true,
+          google_workspace_native: true,
+          processing_strategy: "hybrid" as const,
+        },
+      };
+
       const { data, error } = await clientApiRequestJson(
         "/api/proxy/v1/syncs",
         {
           method: "POST",
-          body: JSON.stringify(config),
+          body: JSON.stringify(finalConfig),
         }
       );
 
@@ -934,27 +951,50 @@ export default function SyncPipelineSidebar({
           <Label htmlFor="schedule" className="font-sans text-black/50">
             Sync Schedule
           </Label>
-          <Select
-            value={config.sync_schedule}
-            onValueChange={(value) =>
-              setConfig((prev) => ({ ...prev, sync_schedule: value }))
-            }
+          <Popover
+            modal={false}
+            open={scheduleOpen}
+            onOpenChange={setScheduleOpen}
           >
-            <SelectTrigger className="rounded-full border-gray-200 focus:border-[#A3BC02] focus:ring-[#A3BC02]/20 font-sans">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-gray-200">
-              {scheduleOptions.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  className="rounded-lg font-sans"
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="flex h-10 w-full items-center justify-between rounded-full border-gray-200 focus:border-[#A3BC02] focus:ring-[#A3BC02]/20 font-sans px-3 py-2 text-sm bg-white hover:bg-white"
+              >
+                <span>
+                  {scheduleOptions.find(
+                    (opt) => opt.value === config.sync_schedule
+                  )?.label || "Select schedule"}
+                </span>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-[var(--radix-popover-trigger-width)] p-0 rounded-xl border-gray-200"
+              align="start"
+            >
+              <Command>
+                <CommandList>
+                  {scheduleOptions.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      value={option.value}
+                      onSelect={() => {
+                        setConfig((prev) => ({
+                          ...prev,
+                          sync_schedule: option.value,
+                        }));
+                        setScheduleOpen(false);
+                      }}
+                      className="rounded-lg font-sans cursor-pointer"
+                    >
+                      {option.label}
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -1021,114 +1061,143 @@ export default function SyncPipelineSidebar({
 
   const renderFileFilters = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="font-serif font-medium">File Type Filters</h3>
-        <Badge variant="outline" className="font-sans">
-          Step 3 of 4
-        </Badge>
+      {/* Header */}
+      <div className="text-left space-y-1 pt-4">
+        <h2 className="font-sans text-xl font-bold text-black">
+          File Type Filters
+        </h2>
       </div>
 
-      <div>
-        <h4 className="font-medium mb-4">Select file types to sync</h4>
-        <div className="grid grid-cols-1 gap-3 max-h-64 overflow-auto">
-          {defaultMimeTypes.map((mimeType) => (
-            <div
-              key={mimeType}
-              className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={
-                    config.filters.mime_types?.includes(mimeType) || false
-                  }
-                  onChange={() => handleMimeTypeToggle(mimeType)}
-                  className="w-4 h-4 text-[#A3BC02] rounded focus:ring-[#A3BC02]"
-                />
-                <Image
-                  src={mimeTypeIcons[mimeType] || "/icons/filetypes/file.svg"}
-                  alt={mimeTypeLabels[mimeType]}
-                  width={24}
-                  height={24}
-                  className="flex-shrink-0"
-                />
-                <span className="text-sm font-medium">
-                  {mimeTypeLabels[mimeType]}
-                </span>
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 max-h-64 overflow-auto">
+            {defaultMimeTypes.map((mimeType) => (
+              <div
+                key={mimeType}
+                className="flex items-center justify-between p-3 border-2 border-gray-200 rounded-full hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => handleMimeTypeToggle(mimeType)}
+              >
+                <div className="flex items-center gap-3">
+                  <Square
+                    className={`w-4 h-4 transition-colors ${
+                      config.filters.mime_types?.includes(mimeType)
+                        ? "fill-[#A3BC02] text-[#A3BC02]"
+                        : "text-[#A3BC02]"
+                    }`}
+                  />
+                  <Image
+                    src={mimeTypeIcons[mimeType] || "/icons/filetypes/file.svg"}
+                    alt={mimeTypeLabels[mimeType]}
+                    width={24}
+                    height={24}
+                    className="flex-shrink-0"
+                  />
+                  <span className="text-sm font-medium font-sans">
+                    {mimeTypeLabels[mimeType]}
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div>
-        <h4 className="font-medium mb-4">Exclusion Patterns</h4>
-        <div className="space-y-2">
-          <Label>Exclude files matching these patterns:</Label>
-          <div className="flex flex-wrap gap-2">
-            {(config.filters.exclude_patterns || []).map((pattern, index) => (
-              <Badge
-                key={index}
-                variant="outline"
-                className="cursor-pointer"
-                onClick={() => {
+        <div className="space-y-4 pt-4">
+          <h4 className="font-sans text-lg font-bold text-black">
+            Exclusion Patterns
+          </h4>
+          <div className="space-y-2">
+            <Label className="font-sans text-black/50">
+              Exclude files matching these patterns:
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {(config.filters.exclude_patterns || []).map((pattern, index) => (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className="cursor-pointer rounded-full font-sans"
+                  onClick={() => {
+                    setConfig((prev) => ({
+                      ...prev,
+                      filters: {
+                        ...prev.filters,
+                        exclude_patterns: (
+                          prev.filters.exclude_patterns || []
+                        ).filter((_, i) => i !== index),
+                      },
+                    }));
+                  }}
+                >
+                  {pattern} ×
+                </Badge>
+              ))}
+            </div>
+            <Input
+              placeholder="Add pattern (e.g., *temp*)"
+              className="rounded-full border-2 border-gray-200 focus:border-[#A3BC02] focus:ring-[#A3BC02]/20 font-sans"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const value = e.currentTarget.value.trim();
+                  if (
+                    value &&
+                    !(config.filters.exclude_patterns || []).includes(value)
+                  ) {
+                    setConfig((prev) => ({
+                      ...prev,
+                      filters: {
+                        ...prev.filters,
+                        exclude_patterns: [
+                          ...(prev.filters.exclude_patterns || []),
+                          value,
+                        ],
+                      },
+                    }));
+                    e.currentTarget.value = "";
+                  }
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h4 className="font-sans text-lg font-bold text-black">
+            Date Filter
+          </h4>
+          <div className="space-y-4">
+            <Label htmlFor="modifiedAfter" className="font-sans text-black/50">
+              Only sync files modified after:
+            </Label>
+            <div className="relative">
+              <input
+                ref={(el) => {
+                  if (el) {
+                    el.onclick = () => el.showPicker?.();
+                  }
+                }}
+                type="date"
+                value={config.filters.modified_after || ""}
+                onChange={(e) => {
                   setConfig((prev) => ({
                     ...prev,
                     filters: {
                       ...prev.filters,
-                      exclude_patterns: (
-                        prev.filters.exclude_patterns || []
-                      ).filter((_, i) => i !== index),
+                      modified_after: e.target.value,
                     },
                   }));
                 }}
-              >
-                {pattern} ×
-              </Badge>
-            ))}
+                className="flex h-10 w-full rounded-2xl border-2 border-gray-200 bg-white px-3 py-2 pr-10 text-sm font-sans focus:border-[#A3BC02] focus:ring-[#A3BC02]/20 [&::-webkit-calendar-picker-indicator]:opacity-0"
+              />
+              <CalendarDays
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer"
+                onClick={(e) => {
+                  const input = e.currentTarget.parentElement?.querySelector(
+                    'input[type="date"]'
+                  ) as HTMLInputElement;
+                  input?.showPicker?.();
+                }}
+              />
+            </div>
           </div>
-          <Input
-            placeholder="Add pattern (e.g., *temp*)"
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const value = e.currentTarget.value.trim();
-                if (
-                  value &&
-                  !(config.filters.exclude_patterns || []).includes(value)
-                ) {
-                  setConfig((prev) => ({
-                    ...prev,
-                    filters: {
-                      ...prev.filters,
-                      exclude_patterns: [
-                        ...(prev.filters.exclude_patterns || []),
-                        value,
-                      ],
-                    },
-                  }));
-                  e.currentTarget.value = "";
-                }
-              }
-            }}
-          />
-        </div>
-      </div>
-
-      <div>
-        <h4 className="font-medium mb-4">Date Filter</h4>
-        <div className="space-y-2">
-          <Label htmlFor="modifiedAfter">Only sync files modified after:</Label>
-          <Input
-            id="modifiedAfter"
-            type="date"
-            value={config.filters.modified_after}
-            onChange={(e) =>
-              setConfig((prev) => ({
-                ...prev,
-                filters: { ...prev.filters, modified_after: e.target.value },
-              }))
-            }
-          />
         </div>
       </div>
     </div>
@@ -1136,163 +1205,67 @@ export default function SyncPipelineSidebar({
 
   const renderPerformanceOptions = () => (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="font-serif font-medium">Performance Options</h3>
-        <Badge variant="outline" className="font-sans">
-          Step 4 of 4
-        </Badge>
+      {/* Header */}
+      <div className="text-left space-y-1 pt-4">
+        <h2 className="font-sans text-xl font-bold text-black">Performance</h2>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-yellow-600" />
-            Performance Settings
-          </CardTitle>
-          <CardDescription>
-            Configure sync performance and processing options
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label>Incremental Sync</Label>
-              <p className="text-sm text-gray-500">
-                Only processes files that have changed since last sync
-              </p>
-            </div>
-            <Switch
-              checked={config.sync_config.incremental_sync}
-              onCheckedChange={(checked) =>
-                setConfig((prev) => ({
-                  ...prev,
-                  sync_config: {
-                    ...prev.sync_config,
-                    incremental_sync: checked,
-                  },
-                }))
-              }
-            />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label>Google Workspace Processing</Label>
-              <p className="text-sm text-gray-500">
-                Uses native APIs for better structure preservation
-              </p>
-            </div>
-            <Switch
-              checked={config.sync_config.google_workspace_native}
-              onCheckedChange={(checked) =>
-                setConfig((prev) => ({
-                  ...prev,
-                  sync_config: {
-                    ...prev.sync_config,
-                    google_workspace_native: checked,
-                  },
-                }))
-              }
-            />
-          </div>
-
-          <Separator />
-
-          <div className="space-y-3">
-            <Label>Processing Strategy</Label>
-            <div className="space-y-2">
-              {[
-                {
-                  value: "hybrid",
-                  label: "Hybrid",
-                  desc: "Uses native APIs when available, falls back to export",
-                },
-                {
-                  value: "native_only",
-                  label: "Native APIs Only",
-                  desc: "Only processes files with native API support",
-                },
-                {
-                  value: "export_only",
-                  label: "Export-based Only",
-                  desc: "Uses traditional export-based processing",
-                },
-              ].map((strategy) => (
-                <div
-                  key={strategy.value}
-                  className="flex items-center space-x-3"
-                >
-                  <input
-                    type="radio"
-                    name="processing_strategy"
-                    value={strategy.value}
-                    checked={
-                      config.sync_config.processing_strategy === strategy.value
-                    }
-                    onChange={(e) =>
-                      setConfig((prev) => ({
-                        ...prev,
-                        sync_config: {
-                          ...prev.sync_config,
-                          processing_strategy: e.target.value as
-                            | "hybrid"
-                            | "native_only"
-                            | "export_only",
-                        },
-                      }))
-                    }
-                    className="w-4 h-4 text-[#A3BC02] focus:ring-[#A3BC02]"
-                  />
-                  <div>
-                    <p className="text-sm font-medium">{strategy.label}</p>
-                    <p className="text-xs text-gray-500">{strategy.desc}</p>
-                  </div>
-                </div>
-              ))}
+      <div className="space-y-6">
+        <div className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-[#ECECECCC] rounded-full">
+              <Label className="font-sans text-custom-dark-green font-medium">
+                Incremental Sync (Workspace Fixed)
+              </Label>
+              <div className="flex items-center gap-2">
+                <RefreshCcw className="w-4 h-4"/>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Sync Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Folders to sync:</span>
-            <span className="text-sm font-medium">
-              {config.filters.sync_entire_drive
-                ? "Entire Drive"
-                : config.filters.folder_ids?.length || "0"}
-            </span>
+        <div className="space-y-4 pt-8">
+          <h4 className="font-sans text-lg font-bold text-black">
+            Sync Summary
+          </h4>
+          <div className="py-4 rounded-2xl bg-gray-50/50 space-y-6">
+            <div className="flex justify-between">
+              <span className="text-sm text-black/70 font-sans">
+                Folders to sync:
+              </span>
+              <span className="text-sm font-medium font-sans bg-[#ECECECCC] p-1 px-4 rounded-full text-custom-dark-green">
+                {config.filters.sync_entire_drive
+                  ? "Entire Drive"
+                  : config.filters.folder_ids?.length || "0"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-black/70 font-sans">
+                File types:
+              </span>
+              <span className="text-sm font-medium font-sans bg-[#ECECECCC] p-1 px-4 rounded-full text-custom-dark-green">
+                {config.filters.mime_types?.length || 0}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-black/70 font-sans">Schedule:</span>
+              <span className="text-sm font-medium font-sans bg-[#ECECECCC] p-1 px-4 rounded-full text-custom-dark-green">
+                {
+                  scheduleOptions.find(
+                    (opt) => opt.value === config.sync_schedule
+                  )?.label
+                }
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-black/70 font-sans">
+                Incremental sync:
+              </span>
+              <span className="text-sm font-medium font-sans bg-[#ECECECCC] p-1 px-4 rounded-full text-custom-dark-green">Enabled</span>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">File types:</span>
-            <span className="text-sm font-medium">
-              {config.filters.mime_types?.length || 0}
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Schedule:</span>
-            <span className="text-sm font-medium">
-              {
-                scheduleOptions.find(
-                  (opt) => opt.value === config.sync_schedule
-                )?.label
-              }
-            </span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Incremental sync:</span>
-            <span className="text-sm font-medium">
-              {config.sync_config.incremental_sync ? "Enabled" : "Disabled"}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 

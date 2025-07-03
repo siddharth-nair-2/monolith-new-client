@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { Clock, Trash2, Archive, ExternalLink, Target, Square } from "lucide-react";
 import Link from "next/link";
+import ChatSidebar from "@/components/history/ChatSidebar";
 
 interface Conversation {
   id: string;
@@ -49,6 +50,8 @@ export default function HistoryPage() {
   const [page, setPage] = useState(1);
   const [showArchived, setShowArchived] = useState(false);
   const [selectedConversations, setSelectedConversations] = useState<Set<string>>(new Set());
+  const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
+  const [selectedConversationId, setSelectedConversationId] = useState<string>("");
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
@@ -510,15 +513,17 @@ export default function HistoryPage() {
                       </AlertDialogContent>
                     </AlertDialog>
 
-                    <Link href={`/chat?conversation=${conversation.id}`}>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-4 w-4 p-0 rounded-full hover:bg-white/50"
-                      >
-                        <ExternalLink className="w-4 h-4 text-[#A3BC02]" />
-                      </Button>
-                    </Link>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-4 w-4 p-0 rounded-full hover:bg-white/50"
+                      onClick={() => {
+                        setSelectedConversationId(conversation.id);
+                        setChatSidebarOpen(true);
+                      }}
+                    >
+                      <ExternalLink className="w-4 h-4 text-[#A3BC02]" />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -680,15 +685,17 @@ export default function HistoryPage() {
                     </AlertDialogContent>
                   </AlertDialog>
 
-                  <Link href={`/chat?conversation=${conversation.id}`}>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-4 w-4 p-0 rounded-full hover:bg-white/50"
-                    >
-                      <ExternalLink className="w-4 h-4 text-[#A3BC02]" />
-                    </Button>
-                  </Link>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-4 w-4 p-0 rounded-full hover:bg-white/50"
+                    onClick={() => {
+                      setSelectedConversationId(conversation.id);
+                      setChatSidebarOpen(true);
+                    }}
+                  >
+                    <ExternalLink className="w-4 h-4 text-[#A3BC02]" />
+                  </Button>
                 </div>
               </div>
             </div>
@@ -951,6 +958,13 @@ export default function HistoryPage() {
           </>
         )}
       </div>
+
+      {/* Chat Sidebar */}
+      <ChatSidebar
+        isOpen={chatSidebarOpen}
+        onClose={() => setChatSidebarOpen(false)}
+        conversationId={selectedConversationId}
+      />
     </div>
   );
 }

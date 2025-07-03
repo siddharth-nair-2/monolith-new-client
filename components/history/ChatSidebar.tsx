@@ -534,7 +534,7 @@ export default function ChatSidebar({
                 <div></div>
               )}
 
-              <Link href={`/chat?conversation=${conversationId}`}>
+              <Link href={`/c/${conversationId}`}>
                 <Button
                   className="
                     text-gray-900
@@ -561,7 +561,7 @@ export default function ChatSidebar({
           </div>
 
           {/* Messages Area */}
-          <ScrollArea className="flex-1 px-8 py-6 pt-12">
+          <ScrollArea className="flex-1 px-4 py-6 pt-12">
             {isLoading ? (
               <div className="flex items-center justify-center py-16">
                 <div className="text-center space-y-4">
@@ -595,14 +595,14 @@ export default function ChatSidebar({
                       <div
                         className={cn(
                           "max-w-[80%]",
-                          message.role === "user" ? "ml-auto" : "mr-auto"
+                          message.role === "user" ? "ml-auto mr-4" : "mr-auto ml-4"
                         )}
                       >
                         {/* Message Content */}
                         <div className="w-full">
                           <div
                             className={cn(
-                              "px-4 py-3 shadow-sm",
+                              "px-4 py-3 shadow-sm z-50",
                               message.role === "user"
                                 ? "bg-[#97A43C] text-white rounded-2xl rounded-br-none"
                                 : "bg-[#F3F5E5] rounded-2xl rounded-bl-none"

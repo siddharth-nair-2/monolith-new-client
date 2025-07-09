@@ -150,38 +150,38 @@ export default function GoogleDriveFileBrowser({ connectionId, onClose, onSyncCo
   const getFileIcon = (mimeType: string): string => {
     const mimeToIcon: Record<string, string> = {
       // Google Workspace files
-      'application/vnd.google-apps.document': '/icons/filetypes/doc.svg',
-      'application/vnd.google-apps.spreadsheet': '/icons/filetypes/xls.svg',
-      'application/vnd.google-apps.presentation': '/icons/filetypes/ppt.svg',
+      'application/vnd.google-apps.document': '/icons/filetypes/word.png',
+      'application/vnd.google-apps.spreadsheet': '/icons/filetypes/excel.png',
+      'application/vnd.google-apps.presentation': '/icons/filetypes/ppt.png',
       
       // Microsoft Office files
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/icons/filetypes/doc.svg',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '/icons/filetypes/xls.svg',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation': '/icons/filetypes/ppt.svg',
-      'application/msword': '/icons/filetypes/doc.svg',
-      'application/vnd.ms-excel': '/icons/filetypes/xls.svg',
-      'application/vnd.ms-powerpoint': '/icons/filetypes/ppt.svg',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/icons/filetypes/word.png',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '/icons/filetypes/excel.png',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': '/icons/filetypes/ppt.png',
+      'application/msword': '/icons/filetypes/word.png',
+      'application/vnd.ms-excel': '/icons/filetypes/excel.png',
+      'application/vnd.ms-powerpoint': '/icons/filetypes/ppt.png',
       
       // Other common types
-      'application/pdf': '/icons/filetypes/pdf.svg',
-      'text/plain': '/icons/filetypes/txt.svg',
-      'text/csv': '/icons/filetypes/csv.svg',
-      'text/xml': '/icons/filetypes/xml.svg',
-      'application/xml': '/icons/filetypes/xml.svg',
-      'text/html': '/icons/filetypes/file.svg',
-      'application/json': '/icons/filetypes/javascript.svg',
-      'text/javascript': '/icons/filetypes/javascript.svg',
-      'application/javascript': '/icons/filetypes/javascript.svg',
-      'text/css': '/icons/filetypes/css.svg',
-      'image/jpeg': '/icons/filetypes/jpg.svg',
-      'image/jpg': '/icons/filetypes/jpg.svg',
-      'image/png': '/icons/filetypes/png.svg',
-      'video/mp4': '/icons/filetypes/mp4.svg',
-      'audio/mpeg': '/icons/filetypes/mp3.svg',
-      'audio/mp3': '/icons/filetypes/mp3.svg',
+      'application/pdf': '/icons/filetypes/pdf.png',
+      'text/plain': '/icons/filetypes/file.png',
+      'text/csv': '/icons/filetypes/excel.png',
+      'text/xml': '/icons/filetypes/file.png',
+      'application/xml': '/icons/filetypes/file.png',
+      'text/html': '/icons/filetypes/file.png',
+      'application/json': '/icons/filetypes/file.png',
+      'text/javascript': '/icons/filetypes/file.png',
+      'application/javascript': '/icons/filetypes/file.png',
+      'text/css': '/icons/filetypes/file.png',
+      'image/jpeg': '/icons/filetypes/file.png',
+      'image/jpg': '/icons/filetypes/file.png',
+      'image/png': '/icons/filetypes/file.png',
+      'video/mp4': '/icons/filetypes/file.png',
+      'audio/mpeg': '/icons/filetypes/file.png',
+      'audio/mp3': '/icons/filetypes/file.png',
     };
     
-    return mimeToIcon[mimeType] || '/icons/filetypes/file.svg';
+    return mimeToIcon[mimeType] || '/icons/filetypes/file.png';
   };
 
   const isGoogleWorkspaceFile = (mimeType: string) => {

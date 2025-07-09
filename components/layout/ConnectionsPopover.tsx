@@ -113,7 +113,7 @@ export function ConnectionsPopover() {
             >
               <div className="flex items-center gap-3">
                 <Image
-                  src="/icons/integrations/google_drive.svg"
+                  src="/icons/integrations/drive.png"
                   alt="Google Drive"
                   width={20}
                   height={20}

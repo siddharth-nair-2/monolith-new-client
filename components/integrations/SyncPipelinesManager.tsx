@@ -94,14 +94,14 @@ export default function SyncPipelinesManager() {
 
   const getIntegrationIcon = (connectorType: string) => {
     const iconMap: Record<string, string> = {
-      google_drive: "/icons/integrations/google_drive.svg",
+      google_drive: "/icons/integrations/drive.png",
       slack: "/icons/integrations/slack.svg",
       outlook: "/icons/integrations/outlook.svg",
       teams: "/icons/integrations/teams.svg",
       // Add more integrations as they become available
     };
 
-    return iconMap[connectorType] || "/icons/integrations/google_drive.svg"; // fallback to google drive icon
+    return iconMap[connectorType] || "/icons/integrations/drive.png"; // fallback to google drive icon
   };
 
   const getIntegrationName = (connectorType: string) => {

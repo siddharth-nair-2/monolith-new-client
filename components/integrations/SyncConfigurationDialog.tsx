@@ -110,15 +110,15 @@ const mimeTypeLabels: Record<string, string> = {
 };
 
 const mimeTypeIcons: Record<string, string> = {
-  'application/pdf': '/icons/filetypes/pdf.svg',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/icons/filetypes/doc.svg',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '/icons/filetypes/xls.svg',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '/icons/filetypes/ppt.svg',
-  'application/vnd.google-apps.document': '/icons/filetypes/doc.svg',
-  'application/vnd.google-apps.spreadsheet': '/icons/filetypes/xls.svg',
-  'application/vnd.google-apps.presentation': '/icons/filetypes/ppt.svg',
-  'text/plain': '/icons/filetypes/txt.svg',
-  'text/markdown': '/icons/filetypes/file.svg'
+  'application/pdf': '/icons/filetypes/pdf.png',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '/icons/filetypes/word.png',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '/icons/filetypes/excel.png',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation': '/icons/filetypes/ppt.png',
+  'application/vnd.google-apps.document': '/icons/filetypes/word.png',
+  'application/vnd.google-apps.spreadsheet': '/icons/filetypes/excel.png',
+  'application/vnd.google-apps.presentation': '/icons/filetypes/ppt.png',
+  'text/plain': '/icons/filetypes/file.png',
+  'text/markdown': '/icons/filetypes/file.png'
 };
 
 export default function SyncConfigurationDialog({ connections, onClose, onSyncCreated }: SyncConfigurationDialogProps) {
@@ -333,7 +333,7 @@ export default function SyncConfigurationDialog({ connections, onClose, onSyncCr
                   className="w-4 h-4 text-[#A3BC02] rounded focus:ring-[#A3BC02]"
                 />
                 <Image 
-                  src={mimeTypeIcons[mimeType] || '/icons/filetypes/file.svg'}
+                  src={mimeTypeIcons[mimeType] || '/icons/filetypes/file.png'}
                   alt={mimeTypeLabels[mimeType]}
                   width={32}
                   height={32}

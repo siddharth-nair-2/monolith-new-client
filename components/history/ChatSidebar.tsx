@@ -120,44 +120,44 @@ export default function ChatSidebar({
 
     const iconMap: Record<string, string> = {
       // Documents
-      pdf: "/icons/filetypes/pdf.svg",
-      doc: "/icons/filetypes/doc.svg",
-      docx: "/icons/filetypes/doc.svg",
-      rtf: "/icons/filetypes/rtf.svg",
-      txt: "/icons/filetypes/txt.svg",
-      md: "/icons/filetypes/txt.svg",
+      pdf: "/icons/filetypes/pdf.png",
+      doc: "/icons/filetypes/word.png",
+      docx: "/icons/filetypes/word.png",
+      rtf: "/icons/filetypes/file.png",
+      txt: "/icons/filetypes/file.png",
+      md: "/icons/filetypes/file.png",
 
       // Spreadsheets
-      xls: "/icons/filetypes/xls.svg",
-      xlsx: "/icons/filetypes/xls.svg",
-      csv: "/icons/filetypes/csv.svg",
+      xls: "/icons/filetypes/excel.png",
+      xlsx: "/icons/filetypes/excel.png",
+      csv: "/icons/filetypes/excel.png",
 
       // Presentations
-      ppt: "/icons/filetypes/ppt.svg",
-      pptx: "/icons/filetypes/ppt.svg",
+      ppt: "/icons/filetypes/ppt.png",
+      pptx: "/icons/filetypes/ppt.png",
 
       // Images
-      jpg: "/icons/filetypes/jpg.svg",
-      jpeg: "/icons/filetypes/jpg.svg",
-      png: "/icons/filetypes/png.svg",
+      jpg: "/icons/filetypes/file.png",
+      jpeg: "/icons/filetypes/file.png",
+      png: "/icons/filetypes/file.png",
 
       // Media
-      mp3: "/icons/filetypes/mp3.svg",
-      mp4: "/icons/filetypes/mp4.svg",
-      avi: "/icons/filetypes/avi.svg",
+      mp3: "/icons/filetypes/file.png",
+      mp4: "/icons/filetypes/file.png",
+      avi: "/icons/filetypes/file.png",
 
       // Code/Web
-      css: "/icons/filetypes/css.svg",
-      js: "/icons/filetypes/javascript.svg",
-      xml: "/icons/filetypes/xml.svg",
+      css: "/icons/filetypes/file.png",
+      js: "/icons/filetypes/file.png",
+      xml: "/icons/filetypes/file.png",
 
       // Other
-      dwg: "/icons/filetypes/dwg.svg",
-      iso: "/icons/filetypes/iso.svg",
-      fla: "/icons/filetypes/fla.svg",
+      dwg: "/icons/filetypes/file.png",
+      iso: "/icons/filetypes/file.png",
+      fla: "/icons/filetypes/file.png",
     };
 
-    return iconMap[extension] || "/icons/filetypes/file.svg";
+    return iconMap[extension] || "/icons/filetypes/file.png";
   };
 
   // Function to deduplicate citations by document and collect citation numbers

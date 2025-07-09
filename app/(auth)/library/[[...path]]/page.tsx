@@ -397,45 +397,45 @@ export default function LibraryPage() {
   const getFileIcon = (extension?: string | null): string => {
     const extToIcon: Record<string, string> = {
       // Microsoft Office
-      doc: "/icons/filetypes/doc.svg",
-      docx: "/icons/filetypes/doc.svg",
-      xls: "/icons/filetypes/xls.svg",
-      xlsx: "/icons/filetypes/xls.svg",
-      ppt: "/icons/filetypes/ppt.svg",
-      pptx: "/icons/filetypes/ppt.svg",
+      doc: "/icons/filetypes/word.png",
+      docx: "/icons/filetypes/word.png",
+      xls: "/icons/filetypes/excel.png",
+      xlsx: "/icons/filetypes/excel.png",
+      ppt: "/icons/filetypes/ppt.png",
+      pptx: "/icons/filetypes/ppt.png",
 
       // Adobe
-      pdf: "/icons/filetypes/pdf.svg",
+      pdf: "/icons/filetypes/pdf.png",
 
-      // Text files
-      txt: "/icons/filetypes/txt.svg",
-      csv: "/icons/filetypes/csv.svg",
-      rtf: "/icons/filetypes/rtf.svg",
-      xml: "/icons/filetypes/xml.svg",
+      // Text files - using generic file icon
+      txt: "/icons/filetypes/file.png",
+      csv: "/icons/filetypes/excel.png",
+      rtf: "/icons/filetypes/file.png",
+      xml: "/icons/filetypes/file.png",
 
-      // Web files
-      js: "/icons/filetypes/javascript.svg",
-      css: "/icons/filetypes/css.svg",
+      // Web files - using generic file icon
+      js: "/icons/filetypes/file.png",
+      css: "/icons/filetypes/file.png",
 
-      // Images
-      jpg: "/icons/filetypes/jpg.svg",
-      jpeg: "/icons/filetypes/jpg.svg",
-      png: "/icons/filetypes/png.svg",
+      // Images - using generic file icon
+      jpg: "/icons/filetypes/file.png",
+      jpeg: "/icons/filetypes/file.png",
+      png: "/icons/filetypes/file.png",
 
-      // Audio/Video
-      mp3: "/icons/filetypes/mp3.svg",
-      mp4: "/icons/filetypes/mp4.svg",
-      avi: "/icons/filetypes/avi.svg",
+      // Audio/Video - using generic file icon
+      mp3: "/icons/filetypes/file.png",
+      mp4: "/icons/filetypes/file.png",
+      avi: "/icons/filetypes/file.png",
 
-      // Other
-      dwg: "/icons/filetypes/dwg.svg",
-      iso: "/icons/filetypes/iso.svg",
-      dbf: "/icons/filetypes/dbf.svg",
-      fla: "/icons/filetypes/fla.svg",
+      // Other - using generic file icon
+      dwg: "/icons/filetypes/file.png",
+      iso: "/icons/filetypes/file.png",
+      dbf: "/icons/filetypes/file.png",
+      fla: "/icons/filetypes/file.png",
     };
 
     return (
-      extToIcon[extension?.toLowerCase() || ""] || "/icons/filetypes/file.svg"
+      extToIcon[extension?.toLowerCase() || ""] || "/icons/filetypes/file.png"
     );
   };
 
@@ -1089,7 +1089,7 @@ export default function LibraryPage() {
                           setIsViewerOpen(true);
                         }}
                       >
-                        {/* Thumbnail or File Icon */}
+                        {/* Thumbnail or Placeholder */}
                         <div className="w-full h-24 bg-gray-50 flex items-center justify-center relative overflow-hidden rounded-xl">
                           {doc.thumbnail_url ? (
                             <Image
@@ -1106,21 +1106,16 @@ export default function LibraryPage() {
                                 target.style.display = "none";
                                 const parent = target.parentElement;
                                 if (parent) {
-                                  parent.innerHTML = `<img src="${getFileIcon(
-                                    doc.extension
-                                  )}" alt="${
-                                    doc.extension || "file"
-                                  }" class="w-8 h-8" />`;
+                                  parent.innerHTML = `<img src="/placeholder/thumbnail_placeholder.jpg" alt="${doc.name}" class="w-full h-full object-cover rounded-xl" />`;
                                 }
                               }}
                             />
                           ) : (
                             <Image
-                              src={getFileIcon(doc.extension)}
-                              alt={doc.extension || "file"}
-                              width={32}
-                              height={32}
-                              className="w-8 h-8"
+                              src="/placeholder/thumbnail_placeholder.jpg"
+                              alt={doc.name}
+                              fill
+                              className="object-cover rounded-xl"
                             />
                           )}
 
@@ -1215,7 +1210,7 @@ export default function LibraryPage() {
                           setIsViewerOpen(true);
                         }}
                       >
-                        {/* Thumbnail or File Icon */}
+                        {/* Thumbnail or Placeholder */}
                         <div className="w-full h-24 bg-gray-50 flex items-center justify-center relative overflow-hidden rounded-xl">
                           {doc.thumbnail_url ? (
                             <Image
@@ -1232,21 +1227,16 @@ export default function LibraryPage() {
                                 target.style.display = "none";
                                 const parent = target.parentElement;
                                 if (parent) {
-                                  parent.innerHTML = `<img src="${getFileIcon(
-                                    doc.extension
-                                  )}" alt="${
-                                    doc.extension || "file"
-                                  }" class="w-8 h-8" />`;
+                                  parent.innerHTML = `<img src="/placeholder/thumbnail_placeholder.jpg" alt="${doc.name}" class="w-full h-full object-cover rounded-xl" />`;
                                 }
                               }}
                             />
                           ) : (
                             <Image
-                              src={getFileIcon(doc.extension)}
-                              alt={doc.extension || "file"}
-                              width={32}
-                              height={32}
-                              className="w-8 h-8"
+                              src="/placeholder/thumbnail_placeholder.jpg"
+                              alt={doc.name}
+                              fill
+                              className="object-cover rounded-xl"
                             />
                           )}
 

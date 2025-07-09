@@ -185,18 +185,18 @@ const mimeTypeLabels: Record<string, string> = {
 };
 
 const mimeTypeIcons: Record<string, string> = {
-  "application/pdf": "/icons/filetypes/pdf.svg",
+  "application/pdf": "/icons/filetypes/pdf.png",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    "/icons/filetypes/doc.svg",
+    "/icons/filetypes/word.png",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-    "/icons/filetypes/xls.svg",
+    "/icons/filetypes/excel.png",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-    "/icons/filetypes/ppt.svg",
-  "application/vnd.google-apps.document": "/icons/filetypes/doc.svg",
-  "application/vnd.google-apps.spreadsheet": "/icons/filetypes/xls.svg",
-  "application/vnd.google-apps.presentation": "/icons/filetypes/ppt.svg",
-  "text/plain": "/icons/filetypes/txt.svg",
-  "text/markdown": "/icons/filetypes/file.svg",
+    "/icons/filetypes/ppt.png",
+  "application/vnd.google-apps.document": "/icons/filetypes/word.png",
+  "application/vnd.google-apps.spreadsheet": "/icons/filetypes/excel.png",
+  "application/vnd.google-apps.presentation": "/icons/filetypes/ppt.png",
+  "text/plain": "/icons/filetypes/file.png",
+  "text/markdown": "/icons/filetypes/file.png",
 };
 
 export default function SyncPipelineSidebar({
@@ -333,66 +333,66 @@ export default function SyncPipelineSidebar({
   const getFileIcon = (mimeType: string): string => {
     const mimeToIcon: Record<string, string> = {
       // Google Workspace files
-      "application/vnd.google-apps.document": "/icons/filetypes/doc.svg",
-      "application/vnd.google-apps.spreadsheet": "/icons/filetypes/xls.svg",
-      "application/vnd.google-apps.presentation": "/icons/filetypes/ppt.svg",
+      "application/vnd.google-apps.document": "/icons/filetypes/word.png",
+      "application/vnd.google-apps.spreadsheet": "/icons/filetypes/excel.png",
+      "application/vnd.google-apps.presentation": "/icons/filetypes/ppt.png",
 
       // Microsoft Office files
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        "/icons/filetypes/doc.svg",
+        "/icons/filetypes/word.png",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-        "/icons/filetypes/xls.svg",
+        "/icons/filetypes/excel.png",
       "application/vnd.openxmlformats-officedocument.presentationml.presentation":
-        "/icons/filetypes/ppt.svg",
-      "application/msword": "/icons/filetypes/doc.svg",
-      "application/vnd.ms-excel": "/icons/filetypes/xls.svg",
-      "application/vnd.ms-powerpoint": "/icons/filetypes/ppt.svg",
+        "/icons/filetypes/ppt.png",
+      "application/msword": "/icons/filetypes/word.png",
+      "application/vnd.ms-excel": "/icons/filetypes/excel.png",
+      "application/vnd.ms-powerpoint": "/icons/filetypes/ppt.png",
 
       // PDFs and text
-      "application/pdf": "/icons/filetypes/pdf.svg",
-      "text/plain": "/icons/filetypes/txt.svg",
-      "text/csv": "/icons/filetypes/csv.svg",
-      "text/markdown": "/icons/filetypes/file.svg",
+      "application/pdf": "/icons/filetypes/pdf.png",
+      "text/plain": "/icons/filetypes/file.png",
+      "text/csv": "/icons/filetypes/excel.png",
+      "text/markdown": "/icons/filetypes/file.png",
 
       // Images
-      "image/jpeg": "/icons/filetypes/jpg.svg",
-      "image/jpg": "/icons/filetypes/jpg.svg",
-      "image/png": "/icons/filetypes/png.svg",
-      "image/gif": "/icons/filetypes/file.svg",
-      "image/bmp": "/icons/filetypes/file.svg",
-      "image/webp": "/icons/filetypes/file.svg",
-      "image/svg+xml": "/icons/filetypes/file.svg",
-      "image/tiff": "/icons/filetypes/file.svg",
-      "image/heic": "/icons/filetypes/file.svg",
-      "image/heif": "/icons/filetypes/file.svg",
+      "image/jpeg": "/icons/filetypes/file.png",
+      "image/jpg": "/icons/filetypes/file.png",
+      "image/png": "/icons/filetypes/file.png",
+      "image/gif": "/icons/filetypes/file.png",
+      "image/bmp": "/icons/filetypes/file.png",
+      "image/webp": "/icons/filetypes/file.png",
+      "image/svg+xml": "/icons/filetypes/file.png",
+      "image/tiff": "/icons/filetypes/file.png",
+      "image/heic": "/icons/filetypes/file.png",
+      "image/heif": "/icons/filetypes/file.png",
 
       // Videos
-      "video/mp4": "/icons/filetypes/mp4.svg",
-      "video/avi": "/icons/filetypes/mp4.svg",
-      "video/mov": "/icons/filetypes/mp4.svg",
-      "video/wmv": "/icons/filetypes/mp4.svg",
-      "video/flv": "/icons/filetypes/mp4.svg",
-      "video/webm": "/icons/filetypes/mp4.svg",
-      "video/mkv": "/icons/filetypes/mp4.svg",
-      "video/m4v": "/icons/filetypes/mp4.svg",
+      "video/mp4": "/icons/filetypes/file.png",
+      "video/avi": "/icons/filetypes/file.png",
+      "video/mov": "/icons/filetypes/file.png",
+      "video/wmv": "/icons/filetypes/file.png",
+      "video/flv": "/icons/filetypes/file.png",
+      "video/webm": "/icons/filetypes/file.png",
+      "video/mkv": "/icons/filetypes/file.png",
+      "video/m4v": "/icons/filetypes/file.png",
 
       // Audio
-      "audio/mpeg": "/icons/filetypes/mp3.svg",
-      "audio/mp3": "/icons/filetypes/mp3.svg",
-      "audio/wav": "/icons/filetypes/mp3.svg",
-      "audio/flac": "/icons/filetypes/mp3.svg",
-      "audio/aac": "/icons/filetypes/mp3.svg",
-      "audio/ogg": "/icons/filetypes/mp3.svg",
-      "audio/m4a": "/icons/filetypes/mp3.svg",
+      "audio/mpeg": "/icons/filetypes/file.png",
+      "audio/mp3": "/icons/filetypes/file.png",
+      "audio/wav": "/icons/filetypes/file.png",
+      "audio/flac": "/icons/filetypes/file.png",
+      "audio/aac": "/icons/filetypes/file.png",
+      "audio/ogg": "/icons/filetypes/file.png",
+      "audio/m4a": "/icons/filetypes/file.png",
 
       // Archives
-      "application/zip": "/icons/filetypes/file.svg",
-      "application/x-rar-compressed": "/icons/filetypes/file.svg",
-      "application/x-7z-compressed": "/icons/filetypes/file.svg",
-      "application/x-tar": "/icons/filetypes/file.svg",
-      "application/gzip": "/icons/filetypes/file.svg",
+      "application/zip": "/icons/filetypes/file.png",
+      "application/x-rar-compressed": "/icons/filetypes/file.png",
+      "application/x-7z-compressed": "/icons/filetypes/file.png",
+      "application/x-tar": "/icons/filetypes/file.png",
+      "application/gzip": "/icons/filetypes/file.png",
     };
-    return mimeToIcon[mimeType] || "/icons/filetypes/file.svg";
+    return mimeToIcon[mimeType] || "/icons/filetypes/file.png";
   };
 
   const trimFileName = (fileName: string, maxLength: number = 20): string => {
@@ -1016,7 +1016,7 @@ export default function SyncPipelineSidebar({
                 )}
               </p>
               <Image
-                src="/icons/integrations/google_drive.svg"
+                src="/icons/integrations/drive.png"
                 alt="Google Drive"
                 width={16}
                 height={16}
@@ -1031,7 +1031,7 @@ export default function SyncPipelineSidebar({
                 Entire Google Drive will be synced
               </p>
               <Image
-                src="/icons/integrations/google_drive.svg"
+                src="/icons/integrations/drive.png"
                 alt="Google Drive"
                 width={16}
                 height={16}
@@ -1046,7 +1046,7 @@ export default function SyncPipelineSidebar({
                 No folders selected. Please go back to select folders.
               </p>
               <Image
-                src="/icons/integrations/google_drive.svg"
+                src="/icons/integrations/drive.png"
                 alt="Google Drive"
                 width={16}
                 height={16}
@@ -1086,7 +1086,7 @@ export default function SyncPipelineSidebar({
                     }`}
                   />
                   <Image
-                    src={mimeTypeIcons[mimeType] || "/icons/filetypes/file.svg"}
+                    src={mimeTypeIcons[mimeType] || "/icons/filetypes/file.png"}
                     alt={mimeTypeLabels[mimeType]}
                     width={24}
                     height={24}

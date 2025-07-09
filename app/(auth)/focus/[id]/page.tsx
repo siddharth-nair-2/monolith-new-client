@@ -354,27 +354,27 @@ export default function FocusModePage({
     const extension = getFileExtension(document);
     
     const iconMap: { [key: string]: string } = {
-      pdf: "/icons/filetypes/pdf.svg",
-      doc: "/icons/filetypes/doc.svg",
-      docx: "/icons/filetypes/doc.svg",
-      xls: "/icons/filetypes/xls.svg",
-      xlsx: "/icons/filetypes/xls.svg",
-      ppt: "/icons/filetypes/ppt.svg",
-      pptx: "/icons/filetypes/ppt.svg",
-      txt: "/icons/filetypes/txt.svg",
-      csv: "/icons/filetypes/csv.svg",
-      jpg: "/icons/filetypes/jpg.svg",
-      jpeg: "/icons/filetypes/jpg.svg",
-      png: "/icons/filetypes/png.svg",
-      mp3: "/icons/filetypes/mp3.svg",
-      mp4: "/icons/filetypes/mp4.svg",
-      avi: "/icons/filetypes/avi.svg",
-      css: "/icons/filetypes/css.svg",
-      js: "/icons/filetypes/javascript.svg",
-      xml: "/icons/filetypes/xml.svg",
+      pdf: "/icons/filetypes/pdf.png",
+      doc: "/icons/filetypes/word.png",
+      docx: "/icons/filetypes/word.png",
+      xls: "/icons/filetypes/excel.png",
+      xlsx: "/icons/filetypes/excel.png",
+      ppt: "/icons/filetypes/ppt.png",
+      pptx: "/icons/filetypes/ppt.png",
+      txt: "/icons/filetypes/file.png",
+      csv: "/icons/filetypes/excel.png",
+      jpg: "/icons/filetypes/file.png",
+      jpeg: "/icons/filetypes/file.png",
+      png: "/icons/filetypes/file.png",
+      mp3: "/icons/filetypes/file.png",
+      mp4: "/icons/filetypes/file.png",
+      avi: "/icons/filetypes/file.png",
+      css: "/icons/filetypes/file.png",
+      js: "/icons/filetypes/file.png",
+      xml: "/icons/filetypes/file.png",
     };
     
-    return iconMap[extension.toLowerCase()] || "/icons/filetypes/file.svg";
+    return iconMap[extension.toLowerCase()] || "/icons/filetypes/file.png";
   };
 
   const filteredAvailableDocuments = availableDocuments.filter((doc) =>

@@ -128,7 +128,7 @@ export default function GoogleDriveIntegration() {
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <Image
-              src="/icons/integrations/google_drive.svg"
+              src="/icons/integrations/drive.png"
               alt="Google Drive"
               width={32}
               height={32}
@@ -165,7 +165,7 @@ export default function GoogleDriveIntegration() {
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <Image
-              src="/icons/integrations/google_drive.svg"
+              src="/icons/integrations/drive.png"
               alt="Google Drive"
               width={32}
               height={32}
@@ -177,7 +177,7 @@ export default function GoogleDriveIntegration() {
           {connections.length === 0 ? (
             <div className="text-center py-8">
               <Image
-                src="/icons/integrations/google_drive.svg"
+                src="/icons/integrations/drive.png"
                 alt="Google Drive"
                 width={48}
                 height={48}

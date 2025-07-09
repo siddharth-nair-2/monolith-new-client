@@ -266,7 +266,7 @@ function SearchSection() {
                 }`}
               >
                 <Image
-                  src="/icons/integrations/google_drive.svg"
+                  src="/icons/integrations/drive.png"
                   alt="Google Drive"
                   width={16}
                   height={16}

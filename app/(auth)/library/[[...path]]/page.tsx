@@ -51,6 +51,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert } from "@/components/ui/alert";
+import { useIntegrations } from "@/lib/integrations-context";
 
 // Types
 interface FolderType {
@@ -109,6 +110,7 @@ interface BreadcrumbItem {
 export default function LibraryPage() {
   const router = useRouter();
   const params = useParams();
+  const { googleDriveConnections } = useIntegrations();
 
   // Extract current folder ID from URL params
   const getCurrentFolderId = (): string | null => {
@@ -838,6 +840,59 @@ export default function LibraryPage() {
           </h1>
 
           <div className="flex items-center gap-2">
+            {googleDriveConnections.length === 0 ? (
+              <Button
+                onClick={() => router.push('/settings?tab=integrations')}
+                className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#00AC47]/90"
+              >
+                <CloudUpload className="w-4 h-4" />
+                Connect Google Drive
+              </Button>
+            ) : googleDriveConnections.length === 1 ? (
+              <Button
+                onClick={() => router.push(`/library/drive/${googleDriveConnections[0].id}`)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#00AC47]/90"
+              >
+                <CloudUpload className="w-4 h-4" />
+                Google Drive
+              </Button>
+            ) : (
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#00AC47]/90"
+                  >
+                    <CloudUpload className="w-4 h-4" />
+                    Google Drive
+                    <ChevronRight className="w-4 h-4 rotate-90" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  {googleDriveConnections.map((connection) => (
+                    <DropdownMenuItem
+                      key={connection.id}
+                      onClick={() => router.push(`/library/drive/${connection.id}`)}
+                    >
+                      <Image
+                        src="/icons/integrations/drive.png"
+                        alt="Google Drive"
+                        width={16}
+                        height={16}
+                        className="mr-2"
+                      />
+                      {connection.name}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => router.push('/settings?tab=integrations')}
+                  >
+                    <CloudUpload className="w-4 h-4 mr-2" />
+                    Add Another Account
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             <Button
               onClick={() => setIsCreateFolderOpen(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#eaeaea] text-custom-dark-green border border-gray-200 hover:bg-gray-50"
@@ -858,8 +913,8 @@ export default function LibraryPage() {
         {/* Description */}
         <div className="mb-8">
           <p className="text-gray-600 text-sm font-sans">
-            Organize and manage your documents with folders. Drag and drop files
-            or entire folders from your desktop, or sync from cloud storage.
+            Organize and manage your uploaded documents with folders. Drag and drop files
+            or entire folders from your desktop. For Google Drive files, use the Google Drive library.
           </p>
         </div>
 

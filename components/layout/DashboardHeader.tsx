@@ -50,7 +50,7 @@ export function DashboardHeader() {
       {/* Left Section: Sidebar + New Button */}
       <div className="flex items-center gap-4 flex-1">
         <SidebarTrigger />
-        <Link href="/chat">
+        <Link href="/dashboard">
           <Button
             className="
               text-gray-900

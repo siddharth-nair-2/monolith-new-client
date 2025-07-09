@@ -19,7 +19,7 @@ function AuthenticatedLayoutContent({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <div className="h-screen flex w-full">
         <AppSidebar />
         <SidebarInset className="flex-1 flex flex-col relative">

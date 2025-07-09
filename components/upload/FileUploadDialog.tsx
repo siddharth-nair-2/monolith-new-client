@@ -19,6 +19,7 @@ interface FileUploadDialogProps {
   maxFiles?: number;
   maxSize?: number;
   acceptedFileTypes?: Record<string, string[]>;
+  folderId?: string;
 }
 
 export function FileUploadDialog({

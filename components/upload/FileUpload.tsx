@@ -41,6 +41,7 @@ interface FileUploadProps {
   acceptedFileTypes?: Record<string, string[]>;
   className?: string;
   compact?: boolean; // For inline use (like in search bars)
+  folderId?: string; // Optional folder ID for organizing uploads
 }
 
 const defaultAcceptedTypes = {
@@ -67,6 +68,7 @@ export function FileUpload({
   acceptedFileTypes = defaultAcceptedTypes,
   className,
   compact = false,
+  folderId,
 }: FileUploadProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -165,7 +167,8 @@ export function FileUpload({
       const formData = new FormData();
       formData.append("file", fileItem.file);
 
-      const response = await fetch("/api/upload", {
+      const url = folderId ? `/api/upload?folder_id=${folderId}` : "/api/upload";
+      const response = await fetch(url, {
         method: "POST",
         body: formData,
       });
@@ -217,7 +220,8 @@ export function FileUpload({
         formData.append(`files`, fileItem.file);
       });
 
-      const response = await fetch("/api/upload/batch", {
+      const url = folderId ? `/api/upload/batch?folder_id=${folderId}` : "/api/upload/batch";
+      const response = await fetch(url, {
         method: "POST",
         body: formData,
       });

@@ -620,7 +620,7 @@ export default function ChatSidebar({
                                   )}
                                 </div>
                               ) : (
-                                <p className="whitespace-pre-wrap mb-0 leading-relaxed text-white text-sm">
+                                <p className="whitespace-pre-wrap mb-0 leading-relaxed text-white text-md">
                                   {message.content}
                                 </p>
                               )}

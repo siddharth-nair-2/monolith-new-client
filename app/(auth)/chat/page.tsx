@@ -436,43 +436,43 @@ export default function ChatPage() {
                                     h1: {
                                       component: 'h1',
                                       props: {
-                                        className: 'text-xl font-serif font-semibold mb-3 text-gray-900'
+                                        className: 'text-lg font-serif font-semibold mb-2 text-gray-900'
                                       }
                                     },
                                     h2: {
                                       component: 'h2',
                                       props: {
-                                        className: 'text-lg font-serif font-semibold mb-2 mt-4 text-gray-900'
+                                        className: 'text-base font-serif font-semibold mb-2 mt-3 text-gray-900'
                                       }
                                     },
                                     h3: {
                                       component: 'h3',
                                       props: {
-                                        className: 'text-base font-semibold mb-2 mt-3 text-gray-900'
+                                        className: 'text-sm font-semibold mb-1 mt-2 text-gray-900'
                                       }
                                     },
                                     p: {
                                       component: 'p',
                                       props: {
-                                        className: 'mb-3 leading-relaxed text-gray-800 last:mb-0'
+                                        className: 'mb-2 leading-relaxed text-gray-800 last:mb-0 text-sm'
                                       }
                                     },
                                     ul: {
                                       component: 'ul',
                                       props: {
-                                        className: 'list-disc pl-4 mb-3 space-y-1'
+                                        className: 'list-disc pl-4 mb-2 space-y-1 text-sm'
                                       }
                                     },
                                     ol: {
                                       component: 'ol',
                                       props: {
-                                        className: 'list-decimal pl-4 mb-3 space-y-1'
+                                        className: 'list-decimal pl-4 mb-2 space-y-1 text-sm'
                                       }
                                     },
                                     li: {
                                       component: 'li',
                                       props: {
-                                        className: 'text-gray-800 leading-relaxed'
+                                        className: 'text-gray-800 leading-relaxed text-sm'
                                       }
                                     },
                                     strong: {
@@ -490,25 +490,25 @@ export default function ChatPage() {
                                     code: {
                                       component: 'code',
                                       props: {
-                                        className: 'bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800'
+                                        className: 'bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-800'
                                       }
                                     },
                                     pre: {
                                       component: 'pre',
                                       props: {
-                                        className: 'bg-gray-50 border border-gray-200 rounded-lg p-4 mb-3 overflow-x-auto'
+                                        className: 'bg-gray-50 border border-gray-200 rounded-lg p-3 mb-2 overflow-x-auto text-xs'
                                       }
                                     },
                                     blockquote: {
                                       component: 'blockquote',
                                       props: {
-                                        className: 'border-l-4 border-[#A3BC02] pl-4 italic text-gray-700 my-3'
+                                        className: 'border-l-4 border-[#A3BC02] pl-3 italic text-gray-700 my-2 text-sm'
                                       }
                                     },
                                     a: {
                                       component: 'a',
                                       props: {
-                                        className: 'text-[#A3BC02] hover:text-[#8BA000] underline transition-colors',
+                                        className: 'text-[#A3BC02] hover:text-[#8BA000] underline transition-colors text-sm',
                                         target: '_blank',
                                         rel: 'noopener noreferrer'
                                       }
@@ -516,7 +516,7 @@ export default function ChatPage() {
                                     table: {
                                       component: 'table',
                                       props: {
-                                        className: 'w-full border-collapse border border-gray-200 mb-3 text-sm'
+                                        className: 'w-full border-collapse border border-gray-200 mb-2 text-xs'
                                       }
                                     },
                                     thead: {
@@ -528,19 +528,19 @@ export default function ChatPage() {
                                     th: {
                                       component: 'th',
                                       props: {
-                                        className: 'border border-gray-200 px-3 py-2 text-left font-semibold text-gray-900'
+                                        className: 'border border-gray-200 px-2 py-1 text-left font-semibold text-gray-900 text-xs'
                                       }
                                     },
                                     td: {
                                       component: 'td',
                                       props: {
-                                        className: 'border border-gray-200 px-3 py-2 text-gray-800'
+                                        className: 'border border-gray-200 px-2 py-1 text-gray-800 text-xs'
                                       }
                                     },
                                     hr: {
                                       component: 'hr',
                                       props: {
-                                        className: 'border-gray-200 my-4'
+                                        className: 'border-gray-200 my-3'
                                       }
                                     }
                                   }

@@ -6,8 +6,16 @@ export async function POST(request: Request) {
     // Get the form data
     const formData = await request.formData();
     
+    // Get folder_id from query params
+    const { searchParams } = new URL(request.url);
+    const folderId = searchParams.get("folder_id");
+    
+    const url = folderId 
+      ? `/api/v1/upload/batch?folder_id=${folderId}`
+      : "/api/v1/upload/batch";
+    
     // The backend expects files to be in a specific format for batch upload
-    const response = await backendApiRequest("/api/v1/upload/batch", {
+    const response = await backendApiRequest(url, {
       method: "POST",
       // Don't set Content-Type for FormData, let the browser set it
       body: formData,

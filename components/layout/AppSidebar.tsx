@@ -27,6 +27,7 @@ import {
   Square,
   Target,
   Plus,
+  Library,
 } from "lucide-react";
 
 interface CurrentUser {
@@ -103,24 +104,24 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={isActive("/documents")}
+                  isActive={isActive("/library")}
                   className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
                 >
-                  <Link href="/documents">
-                    <FileText className="w-5 h-5" />
-                    <span>Documents</span>
+                  <Link href="/library">
+                    <Library className="w-5 h-5" />
+                    <span>Library</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  isActive={isActive("/chat")}
+                  isActive={isActive("/history")}
                   className="hover:bg-[#A3BC02]/10 hover:text-[#3E4128] transition-colors"
                 >
-                  <Link href="/chat">
-                    <MessageSquare className="w-5 h-5" />
-                    <span>Chat</span>
+                  <Link href="/history">
+                    <History className="w-5 h-5" />
+                    <span>History</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -128,7 +129,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Library Section */}
+        {/* Library Section
         <SidebarGroup>
           <SidebarGroupLabel className="text-gray-600">Library</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -147,7 +148,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup> */}
 
 
 
@@ -177,7 +178,7 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              
+
               {/* Recent Focus Modes */}
               {focusModes.map((focusMode, index) => (
                 <div key={focusMode.id}>
@@ -200,7 +201,7 @@ export function AppSidebar() {
                   )}
                 </div>
               ))}
-              
+
               {focusModes.length === 0 && (
                 <SidebarMenuItem>
                   <SidebarMenuButton

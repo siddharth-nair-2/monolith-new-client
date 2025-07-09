@@ -247,10 +247,10 @@ export default function LibraryPage() {
       let url;
       if (folderId) {
         // Get documents in specific folder
-        url = `/api/folders/${folderId}/documents?size=50`;
+        url = `/api/folders/${folderId}/documents?size=50&source_types=upload`;
       } else {
-        // Get only root-level documents (not in any folder)
-        url = `/api/documents?size=50`;
+        // Get only root-level documents (not in any folder) - use "root" as special folder ID
+        url = `/api/folders/root/documents?size=50&source_types=upload`;
       }
 
       const { data, error } = await clientApiRequestJson<DocumentsResponse>(

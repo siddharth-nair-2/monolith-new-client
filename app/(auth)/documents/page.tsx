@@ -26,6 +26,7 @@ import {
   Clock,
   Filter,
   CloudUpload,
+  ExternalLink,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -49,6 +50,8 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useIntegrations } from "@/lib/integrations-context";
+import Image from "next/image";
 
 // Types
 interface FolderType {
@@ -100,6 +103,8 @@ interface DocumentsResponse {
 }
 
 export default function DocumentsPage() {
+  const { googleDriveConnections } = useIntegrations();
+  
   const [folders, setFolders] = useState<FolderType[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
@@ -173,13 +178,13 @@ export default function DocumentsPage() {
     }
   }, []);
 
-  // Fetch documents
+  // Fetch documents (exclude Google Drive files)
   const fetchDocuments = useCallback(async (folderId?: string | null) => {
     setIsLoadingDocuments(true);
     try {
-      let url = "/api/documents?size=50";
+      let url = "/api/documents?size=50&source_types=upload";
       if (folderId) {
-        url = `/api/folders/${folderId}/documents?size=50`;
+        url = `/api/folders/${folderId}/documents?size=50&source_types=upload`;
       }
 
       const { data, error } = await clientApiRequestJson<DocumentsResponse>(url);
@@ -189,7 +194,9 @@ export default function DocumentsPage() {
         // Don't show error toast for empty documents
         setDocuments([]);
       } else if (data && data.items) {
-        setDocuments(data.items);
+        // Additional filter to ensure we only show uploaded files
+        const uploadedFiles = data.items.filter(doc => doc.source_type === 'upload');
+        setDocuments(uploadedFiles);
       } else {
         setDocuments([]);
       }
@@ -671,6 +678,21 @@ export default function DocumentsPage() {
           </h1>
 
           <div className="flex items-center gap-2">
+            {googleDriveConnections.length > 0 && (
+              <Button
+                onClick={() => window.location.href = '/auth/library/drive'}
+                className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#009639]"
+              >
+                <Image
+                  src="/icons/integrations/drive.png"
+                  alt="Google Drive"
+                  width={16}
+                  height={16}
+                />
+                Google Drive
+                <ExternalLink className="w-3 h-3" />
+              </Button>
+            )}
             <Button
               onClick={() => setIsCreateFolderOpen(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#eaeaea] text-custom-dark-green border border-gray-200 hover:bg-gray-50"
@@ -691,7 +713,18 @@ export default function DocumentsPage() {
         {/* Description */}
         <div className="mb-8">
           <p className="text-gray-600 text-sm font-sans">
-            Organize and manage your documents with folders. Drag and drop files or entire folders from your desktop, or sync from cloud storage.
+            Organize and manage your uploaded documents with folders. Drag and drop files or entire folders from your desktop.
+            {googleDriveConnections.length > 0 && (
+              <span className="ml-2 text-[#00AC47]">
+                Your Google Drive files are available in the 
+                <button 
+                  onClick={() => window.location.href = '/auth/library/drive'}
+                  className="underline ml-1 hover:text-[#009639]"
+                >
+                  Google Drive Library
+                </button>.
+              </span>
+            )}
           </p>
         </div>
 

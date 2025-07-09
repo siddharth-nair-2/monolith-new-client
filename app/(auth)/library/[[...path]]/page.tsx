@@ -244,9 +244,13 @@ export default function LibraryPage() {
   const fetchDocuments = useCallback(async (folderId?: string | null) => {
     setIsLoadingDocuments(true);
     try {
-      let url = "/api/documents?size=50";
+      let url;
       if (folderId) {
+        // Get documents in specific folder
         url = `/api/folders/${folderId}/documents?size=50`;
+      } else {
+        // Get only root-level documents (not in any folder)
+        url = `/api/documents?size=50`;
       }
 
       const { data, error } = await clientApiRequestJson<DocumentsResponse>(
@@ -300,7 +304,9 @@ export default function LibraryPage() {
       setIsCreateFolderOpen(false);
       setNewFolderName("");
       setNewFolderDescription("");
+      // Refresh both documents and folders
       fetchDocuments(currentFolderId);
+      fetchChildFolders(currentFolderId);
     } catch (error) {
       toast.error("Failed to create folder");
     }
@@ -330,6 +336,7 @@ export default function LibraryPage() {
       setNewFolderDescription("");
       fetchCurrentFolder(currentFolderId);
       fetchDocuments(currentFolderId);
+      fetchChildFolders(currentFolderId);
     } catch (error) {
       toast.error("Failed to update folder");
     }
@@ -361,6 +368,7 @@ export default function LibraryPage() {
         navigateToFolder(parentId);
       } else {
         fetchDocuments(currentFolderId);
+        fetchChildFolders(currentFolderId);
       }
     } catch (error) {
       toast.error("Failed to delete folder");
@@ -485,38 +493,54 @@ export default function LibraryPage() {
 
     // Helper function to scan entries recursively
     const scanEntry = async (entry: any, path = ""): Promise<void> => {
-      if (entry.isFile) {
-        const file = await new Promise<File>((resolve) => {
-          entry.file(resolve);
-        });
-        const fullPath = path + file.name;
-        files.push(file);
+      try {
+        if (entry.isFile) {
+          const file = await new Promise<File>((resolve, reject) => {
+            entry.file(resolve, reject);
+          });
+          const fullPath = path + file.name;
+          files.push(file);
 
-        // Group files by their folder path
-        if (path) {
-          if (!folderStructure[path]) {
-            folderStructure[path] = [];
+          // Group files by their folder path
+          if (path) {
+            if (!folderStructure[path]) {
+              folderStructure[path] = [];
+            }
+            folderStructure[path].push(file);
           }
-          folderStructure[path].push(file);
-        }
-      } else if (entry.isDirectory) {
-        const dirReader = entry.createReader();
-        const entries = await new Promise<any[]>((resolve) => {
-          dirReader.readEntries(resolve);
-        });
+        } else if (entry.isDirectory) {
+          const dirReader = entry.createReader();
+          const entries = await new Promise<any[]>((resolve, reject) => {
+            dirReader.readEntries(resolve, reject);
+          });
 
-        for (const childEntry of entries) {
-          await scanEntry(childEntry, path + entry.name + "/");
+          for (const childEntry of entries) {
+            await scanEntry(childEntry, path + entry.name + "/");
+          }
         }
+      } catch (error) {
+        console.error(`Error scanning entry ${entry.name}:`, error);
       }
     };
 
     // Process all dropped items
+    // First, collect all entries (DataTransferItemList can become stale)
+    const entries = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const entry = item.webkitGetAsEntry();
       if (entry) {
+        entries.push(entry);
+      }
+    }
+    
+    // Now process all entries
+    for (let i = 0; i < entries.length; i++) {
+      try {
+        const entry = entries[i];
         await scanEntry(entry);
+      } catch (error) {
+        console.error(`Error processing entry ${i}:`, error);
       }
     }
 
@@ -529,8 +553,9 @@ export default function LibraryPage() {
         await uploadFiles(files, currentFolderId);
       }
 
-      // Refresh documents
+      // Refresh documents and folders (in case folders were created)
       await fetchDocuments(currentFolderId);
+      await fetchChildFolders(currentFolderId);
 
       const folderCount = Object.keys(folderStructure).length;
       if (folderCount > 0) {
@@ -579,6 +604,8 @@ export default function LibraryPage() {
 
             if (error) {
               console.error(`Failed to create folder ${part}:`, error);
+              // If folder creation fails, don't try to upload files to it
+              // This prevents files from being uploaded to root when folder creation fails
               continue;
             }
 
@@ -592,7 +619,8 @@ export default function LibraryPage() {
         // Upload files to this folder
         const filesToUpload = folderStructure[path];
         if (filesToUpload.length > 0) {
-          await uploadFiles(filesToUpload, parentId || currentFolderId);
+          const targetFolderId = parentId || currentFolderId;
+          await uploadFiles(filesToUpload, targetFolderId);
         }
       }
     } else {
@@ -618,6 +646,7 @@ export default function LibraryPage() {
               .pop() || "",
         }));
 
+
         // Create all folders in bulk
         const { data, error } = await clientApiRequestJson(
           "/api/folders/bulk",
@@ -632,28 +661,54 @@ export default function LibraryPage() {
         );
 
         if (error) {
+          console.error("Failed to create folder structure:", error);
           throw new Error("Failed to create folder structure");
         }
 
         // Build path to folder ID mapping
         const pathToId = new Map<string, string>();
+        
         if (data && data.created_folders) {
           data.created_folders.forEach((folder: any) => {
             pathToId.set(folder.path, folder.id);
           });
         }
+        
         if (data && data.existing_folders) {
           data.existing_folders.forEach((folder: any) => {
             pathToId.set(folder.path, folder.id);
           });
         }
-
+        
         // Now upload files to their respective folders
         for (const [path, files] of Object.entries(folderStructure)) {
           if (files.length > 0) {
-            const folderPath = "/" + path.replace(/\/$/, "");
-            const folderId = pathToId.get(folderPath);
-            await uploadFiles(files, folderId || null);
+            // The folderStructure keys have trailing slashes (e.g., "MyFolder/")
+            // but the pathToId mapping uses paths without trailing slashes (e.g., "/MyFolder")
+            const normalizedPath = "/" + path.replace(/\/$/, "");
+            let folderId = pathToId.get(normalizedPath);
+            
+            // If not found, try alternate path formats
+            if (!folderId) {
+              const alternatePaths = [
+                path.replace(/\/$/, ""), // "MyFolder/"" -> "MyFolder"
+                "/" + path.replace(/\/$/, ""), // "MyFolder/" -> "/MyFolder"
+                path, // Original path "MyFolder/"
+                normalizedPath.replace(/^\/+/, "/") // Clean up multiple leading slashes
+              ];
+              
+              for (const altPath of alternatePaths) {
+                folderId = pathToId.get(altPath);
+                if (folderId) break;
+              }
+            }
+            
+            if (folderId) {
+              await uploadFiles(files, folderId);
+            } else {
+              console.error(`Failed to find folder ID for path: "${path}". Files will be uploaded to root.`);
+              await uploadFiles(files, null);
+            }
           }
         }
       }
@@ -670,7 +725,7 @@ export default function LibraryPage() {
     const url = folderId
       ? `/api/upload/batch?folder_id=${folderId}`
       : "/api/upload/batch";
-
+    
     const response = await fetch(url, {
       method: "POST",
       body: formData,

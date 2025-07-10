@@ -106,10 +106,6 @@ export default function WaitlistPage() {
       });
 
       const responseData = await response.json();
-      console.log(
-        "CLIENT SIDE - Full responseData from /api/waitlist:",
-        responseData
-      );
 
       if (!response.ok) {
         const errorMessage =

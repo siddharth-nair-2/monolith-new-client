@@ -1,6 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
 import { Instrument_Sans, Instrument_Serif } from "next/font/google"
+import { Toaster } from "sonner"
+import { AuthProvider } from "@/lib/auth-context"
 import "./globals.css"
 
 const instrumentSans = Instrument_Sans({
@@ -28,7 +30,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${instrumentSans.variable} ${instrumentSerif.variable}`}>
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+        <Toaster position="top-right" />
+      </body>
     </html>
   )
 }

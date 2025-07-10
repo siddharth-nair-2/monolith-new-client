@@ -10,48 +10,70 @@ export async function apiRequest(
   options: ApiRequestOptions = {}
 ): Promise<Response> {
   const cookieStore = await cookies();
-  const accessToken = cookieStore.get("auth_token");
+  let accessToken = cookieStore.get("auth_token");
   const refreshToken = cookieStore.get("refresh_token");
 
   const headers = new Headers(options.headers);
 
-  // Add auth headers if tokens exist and not skipping auth
-  if (!options.skipAuth) {
-    if (accessToken?.value) {
-      headers.set("Authorization", `Bearer ${accessToken.value}`);
-    }
-    if (refreshToken?.value) {
-      headers.set("X-Refresh-Token", refreshToken.value);
-    }
+  // Add auth header if token exists and not skipping auth
+  if (!options.skipAuth && accessToken?.value) {
+    headers.set("Authorization", `Bearer ${accessToken.value}`);
   }
 
   // Make the request
-  const response = await fetch(url, {
+  let response = await fetch(url, {
     ...options,
     headers,
   });
 
-  // Check for new tokens in response headers
-  const newAccessToken = response.headers.get("X-New-Access-Token");
-  const newRefreshToken = response.headers.get("X-New-Refresh-Token");
+  // If 401 and we have refresh token, try to refresh once
+  if (response.status === 401 && refreshToken?.value && !options.skipAuth) {
+    try {
+      // Call refresh endpoint
+      const refreshResponse = await fetch(`${process.env.FASTAPI_BASE_URL}/api/v1/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken.value })
+      });
 
-  if (newAccessToken && newRefreshToken) {
-    // Update stored tokens
-    cookieStore.set("auth_token", newAccessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-    });
+      if (refreshResponse.ok) {
+        const { access_token, refresh_token: new_refresh_token } = await refreshResponse.json();
+        
+        // Update stored tokens
+        cookieStore.set("auth_token", access_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 60 * 60, // 1 hour for access token
+        });
 
-    cookieStore.set("refresh_token", newRefreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 30 * 24 * 60 * 60, // 30 days
-    });
+        cookieStore.set("refresh_token", new_refresh_token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 30 * 24 * 60 * 60, // 30 days for refresh token
+        });
+
+        // Retry original request with new token
+        headers.set("Authorization", `Bearer ${access_token}`);
+        response = await fetch(url, {
+          ...options,
+          headers,
+        });
+      } else {
+        // Refresh failed - redirect to login
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login';
+        }
+      }
+    } catch (refreshError) {
+      console.error('Token refresh failed:', refreshError);
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth/login';
+      }
+    }
   }
 
   return response;

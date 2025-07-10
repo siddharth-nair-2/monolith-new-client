@@ -1,0 +1,8 @@
+components/
+.claude/
+
+FRONTEND_BACKEND_INTEGRATION_PLAN.md
+FRONTEND-PAGES-GUIDE.md
+next-logs.txt
+next.config.mjs
+openapi.json

@@ -119,25 +119,36 @@ export async function POST(request: Request) {
       );
     }
 
-    // The backend returns 'token' field for signup
-    const token = backendData.token;
+    // Extract both tokens from backend response
+    const { access_token, refresh_token } = backendData;
     
-    if (token) {
+    if (access_token && refresh_token) {
       const cookieStore = await cookies();
       
-      // Set auth cookie
-      cookieStore.set("auth_token", token, {
+      // Store access token
+      cookieStore.set("auth_token", access_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 24 * 60 * 60, // 1 day for new signups
+        maxAge: 60 * 60, // 1 hour for access token
+      });
+
+      // Store refresh token
+      cookieStore.set("refresh_token", refresh_token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60, // 30 days for refresh token
       });
     }
 
     return NextResponse.json({
       success: true,
       user: backendData.user,
+      expires_at: backendData.expires_at,
+      is_new_company: backendData.is_new_company,
       message: "Account created successfully",
     }, { status: 200 });
   } catch (error: any) {

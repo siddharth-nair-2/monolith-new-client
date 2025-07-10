@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { jwtDecode } from 'jwt-decode';
 
 // Define public routes that don't require authentication
 const publicRoutes = [
@@ -25,10 +26,42 @@ const publicApiRoutes = [
   '/api/waitlist',
 ];
 
+// JWT token payload interface
+interface JWTPayload {
+  exp: number;
+  iat: number;
+  sub?: string;
+  [key: string]: any;
+}
+
+// Helper to check if tokens are valid
+function hasValidTokens(accessToken: string | undefined, refreshToken: string | undefined): boolean {
+  // If no tokens, definitely not valid
+  if (!accessToken || !refreshToken) return false;
+  
+  try {
+    // Decode and check access token expiration
+    const decoded = jwtDecode<JWTPayload>(accessToken);
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Check if token is expired (with 1 minute buffer)
+    if (decoded.exp && decoded.exp < (now + 60)) {
+      // Token is expired or expiring soon, still valid if we have refresh token
+      return !!refreshToken;
+    }
+    
+    return true;
+  } catch (error) {
+    // If we can't decode the token, assume it's invalid
+    // But still valid if we have a refresh token to recover
+    return !!refreshToken;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const accessToken = request.cookies.get('auth_token');
-  const refreshToken = request.cookies.get('refresh_token');
+  const accessToken = request.cookies.get('auth_token')?.value;
+  const refreshToken = request.cookies.get('refresh_token')?.value;
   
   // Define auth pages that logged-in users shouldn't access
   const authPages = ['/login', '/signup', '/forgot-password', '/reset-password'];
@@ -50,13 +83,16 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // If user has token and tries to access auth pages, redirect to dashboard
-  if (accessToken && isAuthPage) {
+  // Check if tokens are valid
+  const hasTokens = hasValidTokens(accessToken, refreshToken);
+  
+  // If user has valid tokens and tries to access auth pages, redirect to dashboard
+  if (hasTokens && isAuthPage) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
   
-  // If no tokens and trying to access protected route
-  if (!accessToken && !refreshToken && !isPublicRoute && !isPublicApiRoute) {
+  // If no valid tokens and trying to access protected route
+  if (!hasTokens && !isPublicRoute && !isPublicApiRoute) {
     if (pathname.startsWith('/api/')) {
       // For API routes, return 401
       return NextResponse.json(
@@ -77,17 +113,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
   
-  // For API requests, add refresh token header if available
-  if (pathname.startsWith('/api/') && !isPublicApiRoute && refreshToken) {
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('X-Refresh-Token', refreshToken.value);
-    
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
-  }
   
   return NextResponse.next();
 }

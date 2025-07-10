@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { backendApiRequest } from '@/lib/api-client';
+import { proxyApiRequest } from '@/lib/api-client';
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,11 +11,33 @@ export async function GET(request: NextRequest) {
     console.log('Proxy request to:', endpoint);
     console.log('Request cookies:', request.headers.get('cookie'));
     
-    const response = await backendApiRequest(endpoint, {
+    const response = await proxyApiRequest(endpoint, request, {
       method: 'GET',
     });
     
     console.log('Backend response status:', response.status);
+
+    // Handle token refresh
+    const newAccessToken = response.headers.get('X-New-Access-Token');
+    const newRefreshToken = response.headers.get('X-New-Refresh-Token');
+    
+    if (newAccessToken && newRefreshToken) {
+      const cookieStore = await cookies();
+      cookieStore.set("auth_token", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60, // 1 hour
+      });
+      cookieStore.set("refresh_token", newRefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+      });
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({

@@ -13,11 +13,20 @@ export async function apiRequest(
   let accessToken = cookieStore.get("auth_token");
   const refreshToken = cookieStore.get("refresh_token");
 
+  console.log('Auth tokens:', { 
+    hasAccessToken: !!accessToken?.value, 
+    hasRefreshToken: !!refreshToken?.value,
+    accessTokenLength: accessToken?.value?.length 
+  });
+
   const headers = new Headers(options.headers);
 
   // Add auth header if token exists and not skipping auth
   if (!options.skipAuth && accessToken?.value) {
     headers.set("Authorization", `Bearer ${accessToken.value}`);
+    console.log('Added auth header');
+  } else {
+    console.log('No auth header added:', { skipAuth: options.skipAuth, hasToken: !!accessToken?.value });
   }
 
   // Make the request

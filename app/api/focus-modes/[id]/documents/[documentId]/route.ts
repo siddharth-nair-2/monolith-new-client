@@ -3,11 +3,13 @@ import { backendApiRequest } from "@/lib/api-client";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string; documentId: string } }
+  { params }: { params: Promise<{ id: string; documentId: string }> }
 ) {
   try {
+    const { id, documentId } = await params;
+    
     const response = await backendApiRequest(
-      `/api/v1/focus-modes/${params.id}/documents/${params.documentId}`,
+      `/api/v1/focus-modes/${id}/documents/${documentId}`,
       {
         method: "DELETE",
       }
@@ -24,10 +26,12 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json(null, { status: 204 });
+    // For 204 responses, use new Response() instead of NextResponse.json()
+    return new Response(null, { status: 204 });
   } catch (error: any) {
+    const { id, documentId } = await params;
     console.error(
-      `API /api/focus-modes/${params.id}/documents/${params.documentId} DELETE error:`,
+      `API /api/focus-modes/${id}/documents/${documentId} DELETE error:`,
       error
     );
     

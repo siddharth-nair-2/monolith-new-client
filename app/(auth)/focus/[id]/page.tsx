@@ -20,14 +20,8 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
@@ -38,7 +32,6 @@ import {
   FileText,
   MessageSquare,
   Download,
-  Search,
   Target,
   Archive,
   MoreHorizontal,
@@ -46,6 +39,7 @@ import {
   CircleAlert,
   Loader2,
   FolderOpen,
+  Eye,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -56,6 +50,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import Image from "next/image";
+import DocumentSelectionModal from "@/components/focus/DocumentSelectionModal";
+import { DocumentViewer } from "@/components/document/DocumentViewer";
 
 // --- TYPE DEFINITIONS (from original file) ---
 interface FocusMode {
@@ -127,24 +123,116 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const getFileIcon = (extension?: string | null): string => {
-  const extToIcon: Record<string, string> = {
-    doc: "/icons/filetypes/word.png",
-    docx: "/icons/filetypes/word.png",
-    xls: "/icons/filetypes/excel.png",
-    xlsx: "/icons/filetypes/excel.png",
-    ppt: "/icons/filetypes/ppt.png",
-    pptx: "/icons/filetypes/ppt.png",
-    pdf: "/icons/filetypes/pdf.png",
-    txt: "/icons/filetypes/file.png",
-    csv: "/icons/filetypes/excel.png",
-    jpg: "/icons/filetypes/file.png",
-    jpeg: "/icons/filetypes/file.png",
-    png: "/icons/filetypes/file.png",
+// Smart filename truncation that preserves file extensions
+const truncateFileName = (fileName: string, maxLength: number = 25) => {
+  if (fileName.length <= maxLength) return fileName;
+
+  const lastDotIndex = fileName.lastIndexOf('.');
+
+  // If no extension or extension is very long, just truncate normally
+  if (lastDotIndex === -1 || fileName.length - lastDotIndex > 10) {
+    return fileName.substring(0, maxLength - 3) + '...';
+  }
+
+  const name = fileName.substring(0, lastDotIndex);
+  const extension = fileName.substring(lastDotIndex);
+
+  // Calculate how much space we have for the name part
+  const availableForName = maxLength - extension.length - 3; // 3 for "..."
+
+  if (availableForName <= 0) {
+    // Extension is too long, just truncate the whole thing
+    return fileName.substring(0, maxLength - 3) + '...';
+  }
+
+  return name.substring(0, availableForName) + '...' + extension;
+};
+
+const getFileIcon = (mimeType?: string, fileName?: string): string => {
+  // Handle by MIME type first (most accurate)
+  const mimeToIcon: Record<string, string> = {
+    // PDF
+    "application/pdf": "/icons/filetypes/pdf.png",
+    
+    // Microsoft Office (legacy)
+    "application/msword": "/icons/filetypes/word.png",
+    "application/vnd.ms-excel": "/icons/filetypes/excel.png",
+    "application/vnd.ms-powerpoint": "/icons/filetypes/ppt.png",
+    
+    // Microsoft Office (modern)
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "/icons/filetypes/word.png",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "/icons/filetypes/excel.png",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": "/icons/filetypes/ppt.png",
+    
+    // Google Workspace
+    "application/vnd.google-apps.document": "/icons/filetypes/word.png",
+    "application/vnd.google-apps.spreadsheet": "/icons/filetypes/excel.png",
+    "application/vnd.google-apps.presentation": "/icons/filetypes/ppt.png",
+    
+    // Text files
+    "text/plain": "/icons/filetypes/file.png",
+    "text/csv": "/icons/filetypes/excel.png",
+    "text/rtf": "/icons/filetypes/file.png",
+    "application/rtf": "/icons/filetypes/file.png",
+    "text/xml": "/icons/filetypes/file.png",
+    "application/xml": "/icons/filetypes/file.png",
+    
+    // Images
+    "image/jpeg": "/icons/filetypes/file.png",
+    "image/jpg": "/icons/filetypes/file.png",
+    "image/png": "/icons/filetypes/file.png",
+    "image/gif": "/icons/filetypes/file.png",
+    
+    // Audio/Video
+    "audio/mpeg": "/icons/filetypes/file.png",
+    "video/mp4": "/icons/filetypes/file.png",
+    "video/avi": "/icons/filetypes/file.png",
   };
-  return (
-    extToIcon[extension?.toLowerCase() || ""] || "/icons/filetypes/file.png"
-  );
+  
+  // Check MIME type first
+  if (mimeType && mimeToIcon[mimeType]) {
+    return mimeToIcon[mimeType];
+  }
+  
+  // Fallback to extension from filename
+  if (fileName) {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    const extToIcon: Record<string, string> = {
+      // Microsoft Office
+      doc: "/icons/filetypes/word.png",
+      docx: "/icons/filetypes/word.png",
+      xls: "/icons/filetypes/excel.png",
+      xlsx: "/icons/filetypes/excel.png",
+      ppt: "/icons/filetypes/ppt.png",
+      pptx: "/icons/filetypes/ppt.png",
+      
+      // Adobe
+      pdf: "/icons/filetypes/pdf.png",
+      
+      // Text files
+      txt: "/icons/filetypes/file.png",
+      csv: "/icons/filetypes/excel.png",
+      rtf: "/icons/filetypes/file.png",
+      xml: "/icons/filetypes/file.png",
+      
+      // Images
+      jpg: "/icons/filetypes/file.png",
+      jpeg: "/icons/filetypes/file.png",
+      png: "/icons/filetypes/file.png",
+      gif: "/icons/filetypes/file.png",
+      
+      // Audio/Video
+      mp3: "/icons/filetypes/file.png",
+      mp4: "/icons/filetypes/file.png",
+      avi: "/icons/filetypes/file.png",
+    };
+    
+    if (extension && extToIcon[extension]) {
+      return extToIcon[extension];
+    }
+  }
+  
+  return "/icons/filetypes/file.png";
 };
 
 // --- REUSABLE COMPONENTS (Standardized) ---
@@ -153,22 +241,30 @@ const DocumentCard = memo(
   ({
     document,
     onRemove,
+    onView,
   }: {
     document: Document;
     onRemove: (documentId: string) => void;
+    onView: (document: Document) => void;
   }) => {
     return (
-      <div className="group cursor-pointer relative bg-white border-none rounded-xl p-4 py-[14px] hover:shadow-md transition-all duration-200 hover:border-gray-300 flex flex-col justify-between">
+      <div 
+        className="group cursor-pointer relative bg-white border-none rounded-xl p-4 py-[14px] hover:shadow-md transition-all duration-200 hover:border-gray-300 flex flex-col justify-between"
+        onClick={() => onView(document)}
+      >
         <div className="pb-2">
-          <p className="text-sm font-medium text-gray-900 font-sans line-clamp-1 leading-tight">
-            {document.display_name}
+          <p 
+            className="text-sm font-medium text-gray-900 font-sans leading-tight"
+            title={document.display_name}
+          >
+            {truncateFileName(document.display_name)}
           </p>
         </div>
         <div className="flex justify-center mt-auto items-center">
           <div className="flex items-center">
             <Image
-              src={getFileIcon(document.extension)}
-              alt={document.extension || "file"}
+              src={getFileIcon(document.mime_type, document.display_name)}
+              alt={document.mime_type || "file"}
               width={16}
               height={16}
             />
@@ -192,7 +288,17 @@ const DocumentCard = memo(
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onView(document);
+                  }}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  View
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
                     window.open(
                       `/api/documents/${document.id}/download`,
                       "_blank"
@@ -205,7 +311,10 @@ const DocumentCard = memo(
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => onRemove(document.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRemove(document.id);
+                  }}
                   className="text-red-600"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -216,7 +325,7 @@ const DocumentCard = memo(
           </div>
         </div>
         <div className="absolute -bottom-1 -right-1">
-          {document.processing_status === "COMPLETED" ? (
+          {document.status === "COMPLETED" ? (
             <div className="w-4 h-4 rounded-full flex items-center justify-center bg-white border-none [box-shadow:inset_0_0_16px_0_rgba(163,188,1,0.4)]">
               <Check className="w-3 h-3 text-custom-dark-green" />
             </div>
@@ -373,15 +482,8 @@ export default function FocusModePage({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [addDocumentsDialogOpen, setAddDocumentsDialogOpen] = useState(false);
-  const [availableDocuments, setAvailableDocuments] = useState<
-    AvailableDocument[]
-  >([]);
-  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(
-    new Set()
-  );
-  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
-  const [isAddingDocuments, setIsAddingDocuments] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
 
   // Data loading functions
   const loadFocusModeData = useCallback(async () => {
@@ -415,53 +517,11 @@ export default function FocusModePage({
     }
   }, [id, router]);
 
-  const loadAvailableDocuments = async () => {
-    setIsLoadingDocuments(true);
-    try {
-      const response = await fetch(
-        `/api/focus-modes/documents/available?exclude_focus_mode_id=${id}&page_size=100`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableDocuments(data.documents || []);
-      } else {
-        toast.error("Failed to load available documents");
-      }
-    } catch (error) {
-      toast.error("Failed to load available documents");
-    } finally {
-      setIsLoadingDocuments(false);
-    }
-  };
-
   useEffect(() => {
     loadFocusModeData();
   }, [loadFocusModeData]);
 
   // Action handlers
-  const addDocumentsToFocusMode = async () => {
-    if (selectedDocuments.size === 0) return;
-    setIsAddingDocuments(true);
-    try {
-      const response = await fetch(`/api/focus-modes/${id}/documents`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ document_ids: Array.from(selectedDocuments) }),
-      });
-      if (response.ok) {
-        toast.success(`${selectedDocuments.size} document(s) added.`);
-        setAddDocumentsDialogOpen(false);
-        setSelectedDocuments(new Set());
-        loadFocusModeData();
-      } else {
-        toast.error("Failed to add documents.");
-      }
-    } catch (error) {
-      toast.error("Failed to add documents.");
-    } finally {
-      setIsAddingDocuments(false);
-    }
-  };
 
   const removeDocumentFromFocusMode = async (documentId: string) => {
     try {
@@ -469,13 +529,18 @@ export default function FocusModePage({
         `/api/focus-modes/${id}/documents/${documentId}`,
         { method: "DELETE" }
       );
-      if (response.ok) {
-        setDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
+      
+      // 204 No Content is success for DELETE operations
+      if (response.ok || response.status === 204) {
+        // Refetch the data to ensure UI is in sync
+        await loadFocusModeData();
         toast.success("Document removed from focus mode.");
       } else {
+        console.error("Failed to remove document. Status:", response.status);
         toast.error("Failed to remove document.");
       }
     } catch (error) {
+      console.error("Error removing document:", error);
       toast.error("Failed to remove document.");
     }
   };
@@ -527,9 +592,6 @@ export default function FocusModePage({
     }
   };
 
-  const filteredAvailableDocuments = availableDocuments.filter((doc) =>
-    doc.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   if (isLoading) {
     return (
@@ -573,110 +635,13 @@ export default function FocusModePage({
               <ArrowLeft className="w-4 h-4" />
               Back to Focus Modes
             </Button>
-            <Dialog
-              open={addDocumentsDialogOpen}
-              onOpenChange={setAddDocumentsDialogOpen}
+            <Button
+              onClick={() => setAddDocumentsDialogOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans text-gray-900 border bg-white border-[#A3BC01] [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)] hover:[box-shadow:inset_0_0_36px_0_rgba(163,188,1,0.36),0_2px_12px_0_rgba(163,188,1,0.08)] hover:bg-[#FAFFD8] hover:border-[#8fa002]"
             >
-              <DialogTrigger asChild>
-                <Button
-                  onClick={loadAvailableDocuments}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans text-gray-900 border bg-white border-[#A3BC01] [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)] hover:[box-shadow:inset_0_0_36px_0_rgba(163,188,1,0.36),0_2px_12px_0_rgba(163,188,1,0.08)] hover:bg-[#FAFFD8] hover:border-[#8fa002]"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Files To Focus
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-white border border-gray-200 rounded-2xl max-w-4xl max-h-[80vh] flex flex-col">
-                <DialogHeader>
-                  <DialogTitle className="text-custom-dark-green font-serif">
-                    Add Documents to "{focusMode.name}"
-                  </DialogTitle>
-                  <DialogDescription className="text-gray-600 font-sans">
-                    Select documents to add to this focus mode.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="relative my-4">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search documents..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 rounded-full"
-                  />
-                </div>
-                <div className="flex-1 overflow-y-auto pr-2">
-                  {isLoadingDocuments ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-[#A3BC02]" />
-                    </div>
-                  ) : filteredAvailableDocuments.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      No available documents found.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {filteredAvailableDocuments.map((doc) => (
-                        <div
-                          key={doc.id}
-                          className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg"
-                        >
-                          <Checkbox
-                            checked={selectedDocuments.has(doc.id)}
-                            onCheckedChange={(checked) =>
-                              setSelectedDocuments((prev) => {
-                                const newSet = new Set(prev);
-                                if (checked) newSet.add(doc.id);
-                                else newSet.delete(doc.id);
-                                return newSet;
-                              })
-                            }
-                          />
-                          <Image
-                            src={getFileIcon(doc.file_extension)}
-                            alt={doc.file_extension}
-                            width={24}
-                            height={24}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {doc.name}
-                            </p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="secondary" className="text-xs">
-                                {doc.file_extension?.toUpperCase()}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {formatFileSize(doc.file_size_bytes)}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setAddDocumentsDialogOpen(false)}
-                    className="rounded-full font-sans"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={addDocumentsToFocusMode}
-                    disabled={isAddingDocuments || selectedDocuments.size === 0}
-                    className="bg-[#A3BC02] hover:bg-[#8BA000] text-white rounded-full font-sans"
-                  >
-                    {isAddingDocuments ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      `Add ${selectedDocuments.size} Document(s)`
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+              <Plus className="w-4 h-4" />
+              Add Files To Focus
+            </Button>
           </div>
         </div>
 
@@ -703,10 +668,7 @@ export default function FocusModePage({
                 Add documents to start asking questions about them.
               </p>
               <Button
-                onClick={() => {
-                  setAddDocumentsDialogOpen(true);
-                  loadAvailableDocuments();
-                }}
+                onClick={() => setAddDocumentsDialogOpen(true)}
                 className="rounded-full text-custom-dark-green border bg-white border-[#A3BC01] [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)] hover:[box-shadow:inset_0_0_36px_0_rgba(163,188,1,0.36),0_2px_12px_0_rgba(163,188,1,0.08)] hover:bg-[#FAFFD8] hover:border-[#8fa002]"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -720,6 +682,10 @@ export default function FocusModePage({
                   key={doc.id}
                   document={doc}
                   onRemove={removeDocumentFromFocusMode}
+                  onView={(document) => {
+                    setViewingDocument(document);
+                    setIsViewerOpen(true);
+                  }}
                 />
               ))}
             </div>
@@ -769,6 +735,34 @@ export default function FocusModePage({
           )}
         </div>
       </div>
+
+      {/* Document Selection Modal */}
+      <DocumentSelectionModal
+        isOpen={addDocumentsDialogOpen}
+        onClose={() => setAddDocumentsDialogOpen(false)}
+        focusModeId={id}
+        focusModeName={focusMode.name}
+        onDocumentsAdded={loadFocusModeData}
+      />
+
+      {/* Document Viewer Modal */}
+      <Dialog open={isViewerOpen} onOpenChange={setIsViewerOpen}>
+        <DialogContent className="max-w-[90vw] max-h-[90vh] w-full h-full p-0 overflow-hidden">
+          <DialogTitle className="sr-only">
+            {viewingDocument
+              ? `Viewing ${viewingDocument.display_name}`
+              : "Document Viewer"}
+          </DialogTitle>
+          {viewingDocument && (
+            <DocumentViewer
+              documentId={viewingDocument.id}
+              documentName={viewingDocument.display_name}
+              fileType={viewingDocument.extension || undefined}
+              className="h-full"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

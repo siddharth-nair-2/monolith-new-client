@@ -3,15 +3,16 @@ import { backendApiRequest } from "@/lib/api-client";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const page = searchParams.get("page") || "1";
     const pageSize = searchParams.get("page_size") || "20";
 
     const response = await backendApiRequest(
-      `/api/v1/focus-modes/${params.id}/documents?page=${page}&page_size=${pageSize}`,
+      `/api/v1/focus-modes/${id}/documents?page=${page}&page_size=${pageSize}`,
       {
         method: "GET",
       }
@@ -31,7 +32,8 @@ export async function GET(
 
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
-    console.error(`API /api/focus-modes/${params.id}/documents GET error:`, error);
+    const { id } = await params;
+    console.error(`API /api/focus-modes/${id}/documents GET error:`, error);
     
     return NextResponse.json(
       {
@@ -45,13 +47,14 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     
     const response = await backendApiRequest(
-      `/api/v1/focus-modes/${params.id}/documents`,
+      `/api/v1/focus-modes/${id}/documents`,
       {
         method: "POST",
         headers: {
@@ -75,7 +78,8 @@ export async function POST(
 
     return NextResponse.json(data, { status: 201 });
   } catch (error: any) {
-    console.error(`API /api/focus-modes/${params.id}/documents POST error:`, error);
+    const { id } = await params;
+    console.error(`API /api/focus-modes/${id}/documents POST error:`, error);
     
     return NextResponse.json(
       {

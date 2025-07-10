@@ -17,6 +17,8 @@ import {
   Bot,
   User,
   Search,
+  CloudUpload,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Markdown from "markdown-to-jsx";
@@ -59,6 +61,13 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
   const abortControllerRef = useRef<AbortController | null>(null);
   const hasInitializedRef = useRef(false);
 
+  // Drag and drop states for conversation page
+  const [isDragging, setIsDragging] = useState(false);
+  const [isProcessingDrop, setIsProcessingDrop] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const dragCounter = useRef(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Handle initial load - only run once
   useEffect(() => {
     // Use ref to ensure this only runs once
@@ -75,6 +84,14 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
       if (initialMessage) {
         // New conversation from dashboard
         sessionStorage.removeItem(`initial-message-${conversationId}`);
+        
+        // Check for attachments
+        const attachmentInfo = sessionStorage.getItem(`initial-attachments-${conversationId}`);
+        const attachments = (window as any)[`attachments-${conversationId}`] as File[] || [];
+        
+        // Clean up attachment storage
+        sessionStorage.removeItem(`initial-attachments-${conversationId}`);
+        delete (window as any)[`attachments-${conversationId}`];
         
         // Add user message
         const userMessage: ChatMessage = {
@@ -93,8 +110,8 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
         
         setMessages([userMessage, assistantMessage]);
         
-        // Start streaming immediately
-        handleStreamingResponse(initialMessage);
+        // Start streaming immediately with attachments if any
+        handleStreamingResponse(initialMessage, attachments.length > 0 ? attachments : undefined);
       } else {
         // Existing conversation - load from backend
         try {
@@ -125,26 +142,47 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
 
 
   // Extract streaming logic into a separate function
-  const handleStreamingResponse = async (query: string) => {
+  const handleStreamingResponse = async (query: string, attachments?: File[]) => {
     setIsStreaming(true);
 
     try {
       abortControllerRef.current = new AbortController();
 
-      const response = await fetch("/api/chat/stream", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          conversation_id: conversationId,
-          conversation_history: null,
-          limit: 15,
-          focus_mode_id: null,
-        }),
-        signal: abortControllerRef.current.signal,
-      });
+      let response: Response;
+
+      if (attachments && attachments.length > 0) {
+        // Use streaming with attachments endpoint
+        const formData = new FormData();
+        formData.append("query", query);
+        formData.append("conversation_id", conversationId);
+        formData.append("process_attachments", "true"); // Process for permanent storage
+        
+        attachments.forEach((file) => {
+          formData.append("attachments", file);
+        });
+
+        response = await fetch("/api/chat/stream/with-attachments", {
+          method: "POST",
+          body: formData,
+          signal: abortControllerRef.current.signal,
+        });
+      } else {
+        // Use regular streaming endpoint
+        response = await fetch("/api/chat/stream", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query,
+            conversation_id: conversationId,
+            conversation_history: null,
+            limit: 15,
+            focus_mode_id: null,
+          }),
+          signal: abortControllerRef.current.signal,
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`Chat failed: ${response.statusText}`);
@@ -274,6 +312,117 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
       textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + "px";
     }
   }, [input]);
+
+  // Helper function to flatten files from dropped folders (same as dashboard)
+  const flattenDroppedItems = async (items: DataTransferItemList): Promise<File[]> => {
+    const files: File[] = [];
+
+    const scanEntry = async (entry: any): Promise<void> => {
+      try {
+        if (entry.isFile) {
+          const file = await new Promise<File>((resolve, reject) => {
+            entry.file(resolve, reject);
+          });
+          files.push(file);
+        } else if (entry.isDirectory) {
+          const dirReader = entry.createReader();
+          const entries = await new Promise<any[]>((resolve, reject) => {
+            dirReader.readEntries(resolve, reject);
+          });
+
+          for (const childEntry of entries) {
+            await scanEntry(childEntry);
+          }
+        }
+      } catch (error) {
+        console.error(`Error scanning entry ${entry.name}:`, error);
+      }
+    };
+
+    // Process all dropped items
+    const entries = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const entry = item.webkitGetAsEntry();
+      if (entry) {
+        entries.push(entry);
+      }
+    }
+
+    // Scan all entries
+    for (const entry of entries) {
+      await scanEntry(entry);
+    }
+
+    return files;
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsProcessingDrop(true);
+      try {
+        const droppedFiles = await flattenDroppedItems(e.dataTransfer.items);
+        if (droppedFiles.length > 0) {
+          setAttachedFiles(prev => [...prev, ...droppedFiles]);
+          toast.success(`Attached ${droppedFiles.length} file(s)`);
+        }
+      } catch (error) {
+        console.error("Error processing dropped files:", error);
+        toast.error("Failed to process dropped files");
+      } finally {
+        setIsProcessingDrop(false);
+      }
+    }
+  };
+
+  // File input handler
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setAttachedFiles(prev => [...prev, ...files]);
+      toast.success(`Attached ${files.length} file(s)`);
+    }
+    // Reset the input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Remove attached file
+  const removeAttachedFile = (index: number) => {
+    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   // Function to get file type icon based on filename extension
   const getFileTypeIcon = (filename: string): string => {
@@ -638,6 +787,9 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
     const query = input.trim();
     if (!query || isStreaming) return;
 
+    // Store current attachments
+    const currentAttachments = [...attachedFiles];
+
     // Add user message
     const userMessage: ChatMessage = {
       role: "user",
@@ -646,6 +798,9 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
     };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    
+    // Clear attachments after using them
+    setAttachedFiles([]);
 
     // Add assistant message placeholder
     const assistantMessage: ChatMessage = {
@@ -656,8 +811,8 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
     };
     setMessages((prev) => [...prev, assistantMessage]);
 
-    // Use the same streaming function
-    await handleStreamingResponse(query);
+    // Use the same streaming function with attachments
+    await handleStreamingResponse(query, currentAttachments.length > 0 ? currentAttachments : undefined);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -681,7 +836,43 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
 
 
   return (
-    <div className="min-h-0 flex-1 flex flex-col">
+    <div 
+      className="min-h-0 flex-1 flex flex-col relative"
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {/* Drag overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center">
+            <CloudUpload className="w-16 h-16 text-[#A3BC02] mx-auto mb-4 animate-bounce" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              Drop files or folders here
+            </h3>
+            <p className="text-sm text-gray-500">
+              Files will be attached to your next message
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Processing overlay */}
+      {isProcessingDrop && (
+        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="text-center">
+            <Loader2 className="w-16 h-16 text-[#A3BC02] mx-auto mb-4 animate-spin" />
+            <h3 className="text-xl font-medium text-gray-900 mb-2">
+              Processing files...
+            </h3>
+            <p className="text-sm text-gray-500">
+              Flattening folders and preparing attachments
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Conversation Area */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 px-4 md:px-8 lg:px-12">
         <div className="max-w-4xl mx-auto py-6">
@@ -828,6 +1019,28 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
       {/* Bottom floating input */}
       <div className="fixed bottom-6 left-6 right-6 z-50">
         <div className="w-full max-w-2xl mx-auto">
+          {/* Attached Files Display */}
+          {attachedFiles.length > 0 && (
+            <div className="mb-4 bg-white rounded-2xl shadow-lg border border-gray-100 p-3">
+              <div className="flex flex-wrap gap-2">
+                {attachedFiles.map((file, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="flex items-center gap-2 bg-[#A3BC02]/10 border border-[#A3BC02]/20 rounded-full px-3 py-1 text-sm"
+                  >
+                    <span className="text-gray-700 max-w-32 truncate">{file.name}</span>
+                    <button
+                      onClick={() => removeAttachedFile(index)}
+                      className="text-gray-500 hover:text-gray-700 rounded-full p-0.5 hover:bg-white/50"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           <div className="flex items-center gap-4">
             <div className="relative flex-1 drop-shadow-lg">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-custom-dark-green" />
@@ -865,12 +1078,23 @@ export default function ConversationPage({ params }: { params: Promise<{ id: str
               size="default"
               variant="outline"
               className="rounded-full w-10 h-10 bg-[#F0F0F0] hover:border-[#A3BC02] hover:bg-[#A3BC02]/10 drop-shadow-lg"
+              onClick={() => fileInputRef.current?.click()}
             >
               <Paperclip className="w-5 h-5 text-gray-600" strokeWidth={2.2} />
             </Button>
           </div>
         </div>
       </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={handleFileSelect}
+        className="hidden"
+        accept="*/*"
+      />
     </div>
   );
 }

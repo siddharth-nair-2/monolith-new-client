@@ -26,6 +26,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { 
   Trash2, 
@@ -37,7 +44,8 @@ import {
   Filter, 
   Check, 
   CircleAlert, 
-  MoreHorizontal 
+  MoreHorizontal,
+  ChevronDown
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -65,6 +73,11 @@ interface CreateFocusModeData {
   icon: string;
 }
 
+interface IconOption {
+  icon: string;
+  description: string;
+}
+
 export default function FocusPage() {
   const router = useRouter();
   const [focusModes, setFocusModes] = useState<FocusMode[]>([]);
@@ -76,6 +89,8 @@ export default function FocusPage() {
     icon: "🎯",
   });
   const [isCreating, setIsCreating] = useState(false);
+  const [availableIcons, setAvailableIcons] = useState<IconOption[]>([]);
+  const [isLoadingIcons, setIsLoadingIcons] = useState(false);
 
   const loadFocusModes = async () => {
     try {
@@ -93,6 +108,40 @@ export default function FocusPage() {
       toast.error("Failed to load focus modes");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadAvailableIcons = async () => {
+    try {
+      setIsLoadingIcons(true);
+      const response = await fetch("/api/focus-modes/icons");
+      
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableIcons(data.icons || []);
+      } else {
+        console.error("Failed to load icons");
+        // Fallback to default icons if API fails
+        setAvailableIcons([
+          { icon: "🎯", description: "Target" },
+          { icon: "📁", description: "Folder" },
+          { icon: "📊", description: "Bar Chart" },
+          { icon: "💼", description: "Briefcase" },
+          { icon: "🚀", description: "Rocket" }
+        ]);
+      }
+    } catch (error) {
+      console.error("Failed to load icons:", error);
+      // Fallback to default icons if API fails
+      setAvailableIcons([
+        { icon: "🎯", description: "Target" },
+        { icon: "📁", description: "Folder" },
+        { icon: "📊", description: "Bar Chart" },
+        { icon: "💼", description: "Briefcase" },
+        { icon: "🚀", description: "Rocket" }
+      ]);
+    } finally {
+      setIsLoadingIcons(false);
     }
   };
 
@@ -159,6 +208,7 @@ export default function FocusPage() {
 
   useEffect(() => {
     loadFocusModes();
+    loadAvailableIcons();
   }, []);
 
   const FocusModeCard = memo(({ focusMode }: { focusMode: FocusMode }) => {
@@ -277,7 +327,15 @@ export default function FocusPage() {
               <Filter className="w-4 h-4" />
               Filter
             </Button>
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <Dialog 
+              open={createDialogOpen} 
+              onOpenChange={(open) => {
+                setCreateDialogOpen(open);
+                if (open && availableIcons.length === 0) {
+                  loadAvailableIcons();
+                }
+              }}
+            >
               <DialogTrigger asChild>
                 <Button
                   className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans text-gray-900 border bg-white border-[#A3BC01] [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)] hover:[box-shadow:inset_0_0_36px_0_rgba(163,188,1,0.36),0_2px_12px_0_rgba(163,188,1,0.08)] hover:bg-[#FAFFD8] hover:border-[#8fa002]"
@@ -328,17 +386,42 @@ export default function FocusPage() {
                       Icon
                     </label>
                     <div className="flex items-center gap-2">
-                      <Input
-                        placeholder="🎯"
+                      <Select
                         value={newFocusMode.icon}
-                        onChange={(e) =>
-                          setNewFocusMode((prev) => ({ ...prev, icon: e.target.value }))
+                        onValueChange={(value) =>
+                          setNewFocusMode((prev) => ({ ...prev, icon: value }))
                         }
-                        className="rounded-full w-20 text-center"
-                        maxLength={2}
-                      />
+                        disabled={isLoadingIcons}
+                      >
+                        <SelectTrigger className="rounded-full w-48">
+                          <SelectValue placeholder="🎯">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{newFocusMode.icon}</span>
+                              <span className="text-sm">
+                                {availableIcons.find(i => i.icon === newFocusMode.icon)?.description || "Target"}
+                              </span>
+                            </div>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {isLoadingIcons ? (
+                            <SelectItem value="loading" disabled>
+                              Loading icons...
+                            </SelectItem>
+                          ) : (
+                            availableIcons.map((iconOption) => (
+                              <SelectItem key={iconOption.icon} value={iconOption.icon}>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-lg">{iconOption.icon}</span>
+                                  <span>{iconOption.description}</span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
                       <span className="text-sm text-gray-500">
-                        Choose an emoji to represent this focus mode
+                        Choose an icon to represent this focus mode
                       </span>
                     </div>
                   </div>

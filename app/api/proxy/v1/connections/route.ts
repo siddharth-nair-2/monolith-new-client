@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const queryString = searchParams.toString();
-    const endpoint = `/api/v1/connections${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/api/v1/connections/${queryString ? `?${queryString}` : ''}`;
 
     const response = await backendApiRequest(endpoint, {
       method: 'GET',

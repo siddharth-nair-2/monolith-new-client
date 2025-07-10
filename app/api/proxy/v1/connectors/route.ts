@@ -5,11 +5,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const queryString = searchParams.toString();
-    const endpoint = `/api/v1/connectors${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/api/v1/connectors/${queryString ? `?${queryString}` : ''}`;
 
+    console.log('Proxy request to:', endpoint);
+    console.log('Request cookies:', request.headers.get('cookie'));
+    
     const response = await backendApiRequest(endpoint, {
       method: 'GET',
     });
+    
+    console.log('Backend response status:', response.status);
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({

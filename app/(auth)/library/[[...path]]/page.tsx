@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { clientApiRequestJson } from "@/lib/client-api";
 import { toast } from "sonner";
 import {
@@ -27,6 +28,9 @@ import {
   Check,
   AlertTriangle,
   CircleAlert,
+  Clock,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import Image from "next/image";
 import {
@@ -110,6 +114,7 @@ interface BreadcrumbItem {
 export default function LibraryPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { googleDriveConnections } = useIntegrations();
 
   // Extract current folder ID from URL params
@@ -133,6 +138,14 @@ export default function LibraryPage() {
   const [viewMode, setViewMode] = useState<"folders" | "recent" | "starred">(
     "folders"
   );
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<{
+    documentTypes: string[];
+    processingStatus: string[];
+  }>({
+    documentTypes: [],
+    processingStatus: [],
+  });
 
   // Dialog states
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -535,7 +548,7 @@ export default function LibraryPage() {
         entries.push(entry);
       }
     }
-    
+
     // Now process all entries
     for (let i = 0; i < entries.length; i++) {
       try {
@@ -648,7 +661,6 @@ export default function LibraryPage() {
               .pop() || "",
         }));
 
-
         // Create all folders in bulk
         const { data, error } = await clientApiRequestJson(
           "/api/folders/bulk",
@@ -669,19 +681,19 @@ export default function LibraryPage() {
 
         // Build path to folder ID mapping
         const pathToId = new Map<string, string>();
-        
+
         if (data && data.created_folders) {
           data.created_folders.forEach((folder: any) => {
             pathToId.set(folder.path, folder.id);
           });
         }
-        
+
         if (data && data.existing_folders) {
           data.existing_folders.forEach((folder: any) => {
             pathToId.set(folder.path, folder.id);
           });
         }
-        
+
         // Now upload files to their respective folders
         for (const [path, files] of Object.entries(folderStructure)) {
           if (files.length > 0) {
@@ -689,26 +701,28 @@ export default function LibraryPage() {
             // but the pathToId mapping uses paths without trailing slashes (e.g., "/MyFolder")
             const normalizedPath = "/" + path.replace(/\/$/, "");
             let folderId = pathToId.get(normalizedPath);
-            
+
             // If not found, try alternate path formats
             if (!folderId) {
               const alternatePaths = [
                 path.replace(/\/$/, ""), // "MyFolder/"" -> "MyFolder"
                 "/" + path.replace(/\/$/, ""), // "MyFolder/" -> "/MyFolder"
                 path, // Original path "MyFolder/"
-                normalizedPath.replace(/^\/+/, "/") // Clean up multiple leading slashes
+                normalizedPath.replace(/^\/+/, "/"), // Clean up multiple leading slashes
               ];
-              
+
               for (const altPath of alternatePaths) {
                 folderId = pathToId.get(altPath);
                 if (folderId) break;
               }
             }
-            
+
             if (folderId) {
               await uploadFiles(files, folderId);
             } else {
-              console.error(`Failed to find folder ID for path: "${path}". Files will be uploaded to root.`);
+              console.error(
+                `Failed to find folder ID for path: "${path}". Files will be uploaded to root.`
+              );
               await uploadFiles(files, null);
             }
           }
@@ -727,7 +741,7 @@ export default function LibraryPage() {
     const url = folderId
       ? `/api/upload/batch?folder_id=${folderId}`
       : "/api/upload/batch";
-    
+
     const response = await fetch(url, {
       method: "POST",
       body: formData,
@@ -824,11 +838,149 @@ export default function LibraryPage() {
     return { documents, pdfs, images };
   };
 
+  // Filter definitions
+  const filterDefinitions = {
+    documentTypes: [
+      {
+        id: "spreadsheets",
+        label: "Spreadsheets",
+        icon: "/icons/filetypes/excel.png",
+        extensions: ["csv", "xls", "xlsx"],
+      },
+      {
+        id: "documents",
+        label: "Documents",
+        icon: "/icons/filetypes/word.png",
+        extensions: ["doc", "docx", "txt", "rtf", "md"],
+      },
+      {
+        id: "pdfs",
+        label: "PDFs",
+        icon: "/icons/filetypes/pdf.png",
+        extensions: ["pdf"],
+      },
+      {
+        id: "presentations",
+        label: "Presentations",
+        icon: "/icons/filetypes/ppt.png",
+        extensions: ["ppt", "pptx"],
+      },
+      {
+        id: "images",
+        label: "Images",
+        icon: "/icons/filetypes/file.png",
+        extensions: ["jpg", "jpeg", "png", "gif", "bmp", "webp"],
+      },
+      {
+        id: "others",
+        label: "Others",
+        icon: "/icons/filetypes/file.png",
+        extensions: [], // This will be handled differently in the filter logic
+      },
+    ],
+    processingStatus: [
+      { id: "failed", label: "Failed", icon: XCircle },
+      { id: "pending", label: "Pending", icon: Clock },
+      { id: "processing", label: "Processing", icon: Loader2 },
+      { id: "completed", label: "Completed", icon: CheckCircle },
+    ],
+  };
+
+  // Filter handling functions
+  const toggleDocumentTypeFilter = (typeId: string) => {
+    setActiveFilters((prev) => ({
+      ...prev,
+      documentTypes: prev.documentTypes.includes(typeId)
+        ? prev.documentTypes.filter((id) => id !== typeId)
+        : [...prev.documentTypes, typeId],
+    }));
+  };
+
+  const toggleProcessingStatusFilter = (statusId: string) => {
+    setActiveFilters((prev) => ({
+      ...prev,
+      processingStatus: prev.processingStatus.includes(statusId)
+        ? prev.processingStatus.filter((id) => id !== statusId)
+        : [...prev.processingStatus, statusId],
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({
+      documentTypes: [],
+      processingStatus: [],
+    });
+  };
+
+  // Filter folders and documents based on search query and active filters
+  const filteredFolders = childFolders.filter(
+    (folder) =>
+      searchQuery.trim() === "" ||
+      folder.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredDocuments = documents.filter((doc) => {
+    // Search filter
+    const matchesSearch =
+      searchQuery.trim() === "" ||
+      doc.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Document type filter
+    let matchesDocumentType = true;
+    if (activeFilters.documentTypes.length > 0) {
+      matchesDocumentType = activeFilters.documentTypes.some((typeId) => {
+        const typeConfig = filterDefinitions.documentTypes.find(
+          (t) => t.id === typeId
+        );
+        if (!typeConfig) return false;
+
+        // Handle "Others" category
+        if (typeId === "others") {
+          const docExt = doc.extension?.toLowerCase() || "";
+          // Check if extension is NOT in any of the other categories
+          const allOtherExtensions = filterDefinitions.documentTypes
+            .filter((type) => type.id !== "others")
+            .flatMap((type) => type.extensions);
+          return !allOtherExtensions.includes(docExt);
+        }
+
+        return typeConfig.extensions.includes(
+          doc.extension?.toLowerCase() || ""
+        );
+      });
+    }
+
+    // Processing status filter with correct logic
+    let matchesProcessingStatus = true;
+    if (activeFilters.processingStatus.length > 0) {
+      const docStatus = doc.processing_status?.toUpperCase() || "";
+
+      matchesProcessingStatus = activeFilters.processingStatus.some(
+        (statusId) => {
+          switch (statusId) {
+            case "failed":
+              return docStatus.includes("FAILED");
+            case "pending":
+              return docStatus === "PENDING";
+            case "processing":
+              return docStatus === "PARSING" || docStatus === "QUEUED";
+            case "completed":
+              return docStatus === "COMPLETED";
+            default:
+              return false;
+          }
+        }
+      );
+    }
+
+    return matchesSearch && matchesDocumentType && matchesProcessingStatus;
+  });
+
   const {
     documents: regularDocuments,
     pdfs,
     images,
-  } = categorizeDocuments(documents);
+  } = categorizeDocuments(filteredDocuments);
 
   return (
     <div className="min-h-screen bg-none">
@@ -842,7 +994,7 @@ export default function LibraryPage() {
           <div className="flex items-center gap-2">
             {googleDriveConnections.length === 0 ? (
               <Button
-                onClick={() => router.push('/settings?tab=integrations')}
+                onClick={() => router.push("/settings?tab=integrations")}
                 className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#00AC47]/90"
               >
                 <CloudUpload className="w-4 h-4" />
@@ -850,7 +1002,9 @@ export default function LibraryPage() {
               </Button>
             ) : googleDriveConnections.length === 1 ? (
               <Button
-                onClick={() => router.push(`/library/drive/${googleDriveConnections[0].id}`)}
+                onClick={() =>
+                  router.push(`/library/drive/${googleDriveConnections[0].id}`)
+                }
                 className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#00AC47]/90"
               >
                 <CloudUpload className="w-4 h-4" />
@@ -859,9 +1013,7 @@ export default function LibraryPage() {
             ) : (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#00AC47]/90"
-                  >
+                  <Button className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#00AC47]/90">
                     <CloudUpload className="w-4 h-4" />
                     Google Drive
                     <ChevronRight className="w-4 h-4 rotate-90" />
@@ -871,7 +1023,9 @@ export default function LibraryPage() {
                   {googleDriveConnections.map((connection) => (
                     <DropdownMenuItem
                       key={connection.id}
-                      onClick={() => router.push(`/library/drive/${connection.id}`)}
+                      onClick={() =>
+                        router.push(`/library/drive/${connection.id}`)
+                      }
                     >
                       <Image
                         src="/icons/integrations/drive.png"
@@ -885,7 +1039,7 @@ export default function LibraryPage() {
                   ))}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => router.push('/settings?tab=integrations')}
+                    onClick={() => router.push("/settings?tab=integrations")}
                   >
                     <CloudUpload className="w-4 h-4 mr-2" />
                     Add Another Account
@@ -913,8 +1067,9 @@ export default function LibraryPage() {
         {/* Description */}
         <div className="mb-8">
           <p className="text-gray-600 text-sm font-sans">
-            Organize and manage your uploaded documents with folders. Drag and drop files
-            or entire folders from your desktop. For Google Drive files, use the Google Drive library.
+            Organize and manage your uploaded documents with folders. Drag and
+            drop files or entire folders from your desktop. For Google Drive
+            files, use the Google Drive library.
           </p>
         </div>
 
@@ -942,10 +1097,160 @@ export default function LibraryPage() {
             ))}
           </nav>
 
-          <Button className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#eaeaea] text-custom-dark-green border border-gray-200 hover:bg-gray-50">
-            <Filter className="w-4 h-4" />
-            Filter
-          </Button>
+          <div className="flex items-center space-x-4">
+            <DropdownMenu
+              modal={false}
+              open={isFilterOpen}
+              onOpenChange={setIsFilterOpen}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button className={`flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans ${
+                  activeFilters.documentTypes.length > 0 || activeFilters.processingStatus.length > 0
+                    ? "text-gray-900 border bg-white border-[#A3BC01] [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)] hover:[box-shadow:inset_0_0_36px_0_rgba(163,188,1,0.36),0_2px_12px_0_rgba(163,188,1,0.08)] hover:bg-[#FAFFD8] hover:border-[#8fa002]"
+                    : "bg-[#eaeaea] text-custom-dark-green border border-gray-200 hover:bg-gray-50"
+                }`}>
+                  <Filter className="w-4 h-4" />
+                  Filter
+                  {(activeFilters.documentTypes.length > 0 ||
+                    activeFilters.processingStatus.length > 0) && (
+                    <span className="ml-1 px-2 py-1 text-xs bg-[#A3BC02] text-white rounded-full">
+                      {activeFilters.documentTypes.length +
+                        activeFilters.processingStatus.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-80 bg-white border border-[#A3BC01] rounded-lg [box-shadow:inset_0_0_60px_0_rgba(163,188,1,0.2),0_2px_24px_0_rgba(163,188,1,0.08)] p-4"
+              >
+                <div className="space-y-8">
+                  {/* Document Types Section */}
+                  <div>
+                    <div className="flex items-center justify-between pb-2 mb-4 border-b-custom-dark-green/10 border-b-[1px]">
+                      <h4 className="font-medium text-md text-custom-dark-green">
+                        Types
+                      </h4>
+                      {(activeFilters.documentTypes.length > 0 ||
+                        activeFilters.processingStatus.length > 0) && (
+                        <button
+                          onClick={clearAllFilters}
+                          className="text-xs text-gray-500 opacity-75 hover:opacity-100 transition-opacity"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="space-y-4">
+                      {filterDefinitions.documentTypes.map((type) => (
+                        <div
+                          key={type.id}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Image
+                              src={type.icon}
+                              alt={type.label}
+                              width={16}
+                              height={16}
+                              className="flex-shrink-0"
+                            />
+                            <label
+                              htmlFor={`doc-type-${type.id}`}
+                              className="text-sm font-medium leading-none cursor-pointer text-custom-dark-green"
+                            >
+                              {type.label}
+                            </label>
+                          </div>
+                          <div className="relative">
+                            <input
+                              id={`doc-type-${type.id}`}
+                              type="checkbox"
+                              checked={activeFilters.documentTypes.includes(
+                                type.id
+                              )}
+                              onChange={() => toggleDocumentTypeFilter(type.id)}
+                              className="sr-only"
+                            />
+                            <div
+                              className={`w-4 h-4 rounded border-2 cursor-pointer transition-colors ${
+                                activeFilters.documentTypes.includes(type.id)
+                                  ? "bg-[#A3BC02] border-[#A3BC02]"
+                                  : "border-[#A3BC02] bg-white hover:border-[#A3BC02]"
+                              }`}
+                              onClick={() => toggleDocumentTypeFilter(type.id)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Processing Status Section */}
+                  <div>
+                    <h4 className="font-medium text-md text-custom-dark-green pb-2 mb-4 border-b-custom-dark-green/10 border-b-[1px]">
+                      Status
+                    </h4>
+                    <div className="space-y-4">
+                      {filterDefinitions.processingStatus.map((status) => {
+                        const IconComponent = status.icon;
+                        return (
+                          <div
+                            key={status.id}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <IconComponent className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                              <label
+                                htmlFor={`status-${status.id}`}
+                                className="text-sm font-medium leading-none cursor-pointer text-custom-dark-green"
+                              >
+                                {status.label}
+                              </label>
+                            </div>
+                            <div className="relative">
+                              <input
+                                id={`status-${status.id}`}
+                                type="checkbox"
+                                checked={activeFilters.processingStatus.includes(
+                                  status.id
+                                )}
+                                onChange={() =>
+                                  toggleProcessingStatusFilter(status.id)
+                                }
+                                className="sr-only"
+                              />
+                              <div
+                                className={`w-4 h-4 rounded border-2 cursor-pointer transition-colors ${
+                                  activeFilters.processingStatus.includes(
+                                    status.id
+                                  )
+                                    ? "bg-[#A3BC02] border-[#A3BC02]"
+                                    : "border-[#A3BC02] bg-white hover:border-[#A3BC02]"
+                                }`}
+                                onClick={() =>
+                                  toggleProcessingStatusFilter(status.id)
+                                }
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-custom-dark-green" />
+              <Input
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-64 h-10 rounded-full bg-[#F6F6F6] font-sans border border-gray-400"
+              />
+            </div>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -996,10 +1301,10 @@ export default function LibraryPage() {
           ) : (
             <div className="space-y-6">
               {/* Folders Section */}
-              {childFolders.length > 0 && (
+              {filteredFolders.length > 0 && (
                 <div>
                   <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4 mb-8">
-                    {childFolders.map((folder) => (
+                    {filteredFolders.map((folder) => (
                       <div
                         key={folder.id}
                         className="group cursor-pointer relative"
@@ -1067,7 +1372,7 @@ export default function LibraryPage() {
                   </div>
                 </div>
               )}
-              {childFolders.length > 0 && (
+              {filteredFolders.length > 0 && (
                 <hr className="h-px bg-black/20 border-0 " />
               )}
               {/* Documents Section - Non-PDF/Image files */}
@@ -1425,7 +1730,7 @@ export default function LibraryPage() {
                 </div>
               )}
               {/* Empty State - Only show if no folders AND no documents */}
-              {childFolders.length === 0 &&
+              {filteredFolders.length === 0 &&
                 regularDocuments.length === 0 &&
                 pdfs.length === 0 &&
                 images.length === 0 && (
@@ -1433,10 +1738,14 @@ export default function LibraryPage() {
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 mb-6">
                       <CloudUpload className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-700 mb-2">
-                        No documents yet
+                        {searchQuery.trim()
+                          ? "No matches found"
+                          : "No documents yet"}
                       </h3>
                       <p className="text-sm text-gray-500 mb-6">
-                        Drag and drop files or folders here, or click to upload
+                        {searchQuery.trim()
+                          ? `No files or folders match "${searchQuery}".`
+                          : "Drag and drop files or folders here, or click to upload"}
                       </p>
                       <Button
                         onClick={() => setIsUploadOpen(true)}

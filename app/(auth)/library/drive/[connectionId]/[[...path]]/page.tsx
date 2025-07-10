@@ -20,6 +20,10 @@ import {
   AlertTriangle,
   X,
   Cloud,
+  Filter,
+  CheckCircle,
+  XCircle,
+  Clock,
 } from "lucide-react";
 import Image from "next/image";
 import {
@@ -135,11 +139,21 @@ export default function GoogleDriveConnectionPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
+  
+  // Filter states
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<{
+    documentTypes: string[];
+    syncStatus: string[];
+  }>({
+    documentTypes: [],
+    syncStatus: [],
+  });
 
   // Dialog states
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [viewingDocument, setViewingDocument] = useState<GoogleDriveDocument | null>(null);
-  
+
   // Auth error states
   const [authError, setAuthError] = useState<GoogleDriveAuthError | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -162,17 +176,17 @@ export default function GoogleDriveConnectionPage() {
 
       if (error) {
         console.error("Error fetching Google Drive content:", error);
-        
+
         // Check if it's a Google Drive authentication error
         // The error structure is: { error: { code: 'UNAUTHORIZED', message: "{'error': 'authentication_failed', ...}" } }
         let googleDriveError = null;
-        
+
         if (error.error?.code === 'UNAUTHORIZED' && error.error?.message) {
           try {
             // Convert Python dictionary format to JSON by replacing single quotes with double quotes
             const jsonString = error.error.message.replace(/'/g, '"');
             const parsedError = JSON.parse(jsonString);
-            
+
             if (parsedError.error === 'authentication_expired' || parsedError.error === 'authentication_failed') {
               // Fix the reconnect URL to use Next.js proxy routing
               if (parsedError.reconnect_url && parsedError.reconnect_url.startsWith('/api/v1/')) {
@@ -182,14 +196,14 @@ export default function GoogleDriveConnectionPage() {
             }
           } catch (e) {
             console.error("Failed to parse Google Drive error:", e);
-            
+
             // Fallback: check for authentication keywords in the message
             const message = error.error.message;
             if (message.includes('authentication_failed') || message.includes('authentication_expired')) {
               // Create a fallback error object
               const connectionIdMatch = message.match(/connection_id['"]: ['"]([^'"]+)['"]/);
               const connectionId = connectionIdMatch ? connectionIdMatch[1] : '';
-              
+
               googleDriveError = {
                 error: 'authentication_failed',
                 message: 'Google Drive authentication has expired. Please reconnect your account.',
@@ -200,7 +214,7 @@ export default function GoogleDriveConnectionPage() {
             }
           }
         }
-        
+
         if (googleDriveError) {
           setAuthError(googleDriveError as GoogleDriveAuthError);
           // Clear existing data
@@ -208,7 +222,7 @@ export default function GoogleDriveConnectionPage() {
           setDocuments([]);
           return;
         }
-        
+
         toast.error(`Failed to load Google Drive content: ${error.message || error}`);
         setFolders([]);
         setDocuments([]);
@@ -315,32 +329,32 @@ export default function GoogleDriveConnectionPage() {
   // Smart filename truncation that preserves file extensions
   const truncateFileName = (fileName: string, maxLength: number = 25) => {
     if (fileName.length <= maxLength) return fileName;
-    
+
     const lastDotIndex = fileName.lastIndexOf('.');
-    
+
     // If no extension or extension is very long, just truncate normally
     if (lastDotIndex === -1 || fileName.length - lastDotIndex > 10) {
       return fileName.substring(0, maxLength - 3) + '...';
     }
-    
+
     const name = fileName.substring(0, lastDotIndex);
     const extension = fileName.substring(lastDotIndex);
-    
+
     // Calculate how much space we have for the name part
     const availableForName = maxLength - extension.length - 3; // 3 for "..."
-    
+
     if (availableForName <= 0) {
       // Extension is too long, just truncate the whole thing
       return fileName.substring(0, maxLength - 3) + '...';
     }
-    
+
     return name.substring(0, availableForName) + '...' + extension;
   };
 
   const getSyncStatusBadge = (syncStatus?: string) => {
     // Base circle styling - matching library page
     const baseCircle = "w-4 h-4 rounded-full flex items-center justify-center bg-white border-none";
-    
+
     switch (syncStatus) {
       case 'synced':
         return (
@@ -415,9 +429,9 @@ export default function GoogleDriveConnectionPage() {
   // Handle Google Drive reconnection
   const handleGoogleDriveReconnection = useCallback(async () => {
     if (!authError) return;
-    
+
     setIsReconnecting(true);
-    
+
     try {
       // First, call the OAuth authorization endpoint to get the authorization URL
       const { data, error } = await clientApiRequestJson<{
@@ -425,36 +439,36 @@ export default function GoogleDriveConnectionPage() {
         state: string;
         connector_type: string;
       }>(authError.reconnect_url);
-      
+
       if (error || !data?.authorization_url) {
         console.error('Failed to get authorization URL:', error);
         toast.error('Failed to start reconnection process');
         setIsReconnecting(false);
         return;
       }
-      
+
       // Store state for OAuth callback validation
       sessionStorage.setItem("oauth_state", data.state);
-      
+
       // Open Google OAuth in a popup
       const popup = window.open(
         data.authorization_url,
         'google-drive-reconnect',
         'width=600,height=600,scrollbars=yes,resizable=yes'
       );
-      
+
       if (!popup) {
         toast.error('Please allow popups for this site to reconnect Google Drive');
         setIsReconnecting(false);
         return;
       }
-      
+
       // Check if popup is closed
       const checkClosed = setInterval(() => {
         if (popup.closed) {
           clearInterval(checkClosed);
           setIsReconnecting(false);
-          
+
           // Wait a moment then refresh connections and try fetching content again
           setTimeout(async () => {
             await refreshConnections();
@@ -463,7 +477,7 @@ export default function GoogleDriveConnectionPage() {
           }, 1000);
         }
       }, 1000);
-      
+
     } catch (error) {
       console.error('Error during reconnection:', error);
       toast.error('Failed to start reconnection process');
@@ -499,11 +513,154 @@ export default function GoogleDriveConnectionPage() {
     return { documents, pdfs, images };
   };
 
+  // Filter definitions for Google Drive
+  const filterDefinitions = {
+    documentTypes: [
+      {
+        id: "spreadsheets",
+        label: "Spreadsheets",
+        icon: "/icons/filetypes/excel.png",
+        extensions: ["csv", "xls", "xlsx"],
+        mimeTypes: ["application/vnd.google-apps.spreadsheet"],
+      },
+      {
+        id: "documents",
+        label: "Documents",
+        icon: "/icons/filetypes/word.png",
+        extensions: ["doc", "docx", "txt", "rtf", "md"],
+        mimeTypes: ["application/vnd.google-apps.document"],
+      },
+      {
+        id: "pdfs",
+        label: "PDFs",
+        icon: "/icons/filetypes/pdf.png",
+        extensions: ["pdf"],
+        mimeTypes: ["application/pdf"],
+      },
+      {
+        id: "presentations",
+        label: "Presentations",
+        icon: "/icons/filetypes/ppt.png",
+        extensions: ["ppt", "pptx"],
+        mimeTypes: ["application/vnd.google-apps.presentation"],
+      },
+      {
+        id: "images",
+        label: "Images",
+        icon: "/icons/filetypes/file.png",
+        extensions: ["jpg", "jpeg", "png", "gif", "bmp", "webp"],
+        mimeTypes: ["image/"],
+      },
+      {
+        id: "others",
+        label: "Others",
+        icon: "/icons/filetypes/file.png",
+        extensions: [],
+        mimeTypes: [],
+      },
+    ],
+    syncStatus: [
+      { id: "synced", label: "Synced", icon: CheckCircle },
+      { id: "not_synced", label: "Not Synced", icon: XCircle },
+      { id: "syncing", label: "Syncing", icon: Clock },
+    ],
+  };
+
+  // Filter handling functions
+  const toggleDocumentTypeFilter = (typeId: string) => {
+    setActiveFilters((prev) => ({
+      ...prev,
+      documentTypes: prev.documentTypes.includes(typeId)
+        ? prev.documentTypes.filter((id) => id !== typeId)
+        : [...prev.documentTypes, typeId],
+    }));
+  };
+
+  const toggleSyncStatusFilter = (statusId: string) => {
+    setActiveFilters((prev) => ({
+      ...prev,
+      syncStatus: prev.syncStatus.includes(statusId)
+        ? prev.syncStatus.filter((id) => id !== statusId)
+        : [...prev.syncStatus, statusId],
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({
+      documentTypes: [],
+      syncStatus: [],
+    });
+  };
+
+  // Filter folders and documents based on search query
+  const filteredFolders = folders.filter((folder) =>
+    searchQuery.trim() === "" ||
+    folder.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredDocuments = documents.filter((doc) => {
+    // Search filter
+    const matchesSearch =
+      searchQuery.trim() === "" ||
+      doc.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Document type filter
+    let matchesDocumentType = true;
+    if (activeFilters.documentTypes.length > 0) {
+      matchesDocumentType = activeFilters.documentTypes.some((typeId) => {
+        const typeConfig = filterDefinitions.documentTypes.find(
+          (t) => t.id === typeId
+        );
+        if (!typeConfig) return false;
+
+        // Handle "Others" category
+        if (typeId === "others") {
+          const docExt = doc.name.split('.').pop()?.toLowerCase() || "";
+          const docMime = doc.mime_type;
+          // Check if extension/mime type is NOT in any of the other categories
+          const allOtherExtensions = filterDefinitions.documentTypes
+            .filter((type) => type.id !== "others")
+            .flatMap((type) => type.extensions);
+          const allOtherMimeTypes = filterDefinitions.documentTypes
+            .filter((type) => type.id !== "others")
+            .flatMap((type) => type.mimeTypes);
+          
+          return !allOtherExtensions.includes(docExt) &&
+                 !allOtherMimeTypes.some((mime) => docMime.includes(mime));
+        }
+
+        // Check by extension or mime type
+        const docExt = doc.name.split('.').pop()?.toLowerCase() || "";
+        return typeConfig.extensions.includes(docExt) ||
+               typeConfig.mimeTypes.some((mime) => doc.mime_type.includes(mime));
+      });
+    }
+
+    // Sync status filter
+    let matchesSyncStatus = true;
+    if (activeFilters.syncStatus.length > 0) {
+      matchesSyncStatus = activeFilters.syncStatus.some((statusId) => {
+        switch (statusId) {
+          case "synced":
+            return doc.is_synced === true;
+          case "not_synced":
+            return doc.is_synced === false || doc.is_synced === undefined;
+          case "syncing":
+            return doc.sync_status === "syncing";
+          default:
+            return false;
+        }
+      });
+    }
+
+    return matchesSearch && matchesDocumentType && matchesSyncStatus;
+  });
+
   const {
     documents: regularDocuments,
     pdfs,
     images,
-  } = categorizeDocuments(documents);
+  } = categorizeDocuments(filteredDocuments);
 
   if (integrationsLoading) {
     return (
@@ -561,12 +718,12 @@ export default function GoogleDriveConnectionPage() {
           </h1>
 
           <div className="flex items-center gap-2">
-            {/* Account Switcher */}
-            {googleDriveConnections.length > 1 && (
+            {/* Account Switcher - Always show current connection */}
+            {selectedConnection && (
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#00AC47] text-white hover:bg-[#00AC47]/90"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#eaeaea] text-custom-dark-green border border-gray-200 hover:bg-gray-200"
                   >
                     <Image
                       src="/icons/integrations/drive.png"
@@ -576,10 +733,13 @@ export default function GoogleDriveConnectionPage() {
                       className="mr-1"
                     />
                     {selectedConnection.name}
-                    <ChevronRight className="w-4 h-4 rotate-90" />
+                    {googleDriveConnections.length > 1 && (
+                      <ChevronRight className="w-4 h-4 rotate-90" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                {googleDriveConnections.length > 1 && (
+                  <DropdownMenuContent>
                   {googleDriveConnections.map((connection) => (
                     <DropdownMenuItem
                       key={connection.id}
@@ -603,10 +763,11 @@ export default function GoogleDriveConnectionPage() {
                       {connectionId === connection.id && <span className="ml-auto text-xs text-gray-500">Current</span>}
                     </DropdownMenuItem>
                   ))}
-                </DropdownMenuContent>
+                  </DropdownMenuContent>
+                )}
               </DropdownMenu>
             )}
-            
+
             <Button
               onClick={() => router.push('/library')}
               className="flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans bg-[#eaeaea] text-custom-dark-green border border-gray-200 hover:bg-gray-50"
@@ -687,13 +848,156 @@ export default function GoogleDriveConnectionPage() {
           </nav>
 
           <div className="flex items-center space-x-4">
+            <DropdownMenu
+              modal={false}
+              open={isFilterOpen}
+              onOpenChange={setIsFilterOpen}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button className={`flex items-center gap-2 px-4 py-2 rounded-full transition duration-200 font-sans ${
+                  activeFilters.documentTypes.length > 0 || activeFilters.syncStatus.length > 0
+                    ? "text-gray-900 border bg-white border-[#A3BC01] [box-shadow:inset_0_0_25px_0_rgba(163,188,1,0.2)] hover:[box-shadow:inset_0_0_36px_0_rgba(163,188,1,0.36),0_2px_12px_0_rgba(163,188,1,0.08)] hover:bg-[#FAFFD8] hover:border-[#8fa002]"
+                    : "bg-[#eaeaea] text-custom-dark-green border border-gray-200 hover:bg-gray-50"
+                }`}>
+                  <Filter className="w-4 h-4" />
+                  Filter
+                  {(activeFilters.documentTypes.length > 0 ||
+                    activeFilters.syncStatus.length > 0) && (
+                    <span className="ml-1 px-2 py-1 text-xs bg-[#A3BC02] text-white rounded-full">
+                      {activeFilters.documentTypes.length +
+                        activeFilters.syncStatus.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-80 bg-white border border-[#A3BC01] rounded-lg [box-shadow:inset_0_0_60px_0_rgba(163,188,1,0.2),0_2px_24px_0_rgba(163,188,1,0.08)] p-4"
+              >
+                <div className="space-y-8">
+                  {/* Document Types Section */}
+                  <div>
+                    <div className="flex items-center justify-between pb-2 mb-4 border-b-custom-dark-green/10 border-b-[1px]">
+                      <h4 className="font-medium text-md text-custom-dark-green">
+                        Types
+                      </h4>
+                      {(activeFilters.documentTypes.length > 0 ||
+                        activeFilters.syncStatus.length > 0) && (
+                        <button
+                          onClick={clearAllFilters}
+                          className="text-xs text-gray-500 opacity-75 hover:opacity-100 transition-opacity"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    <div className="space-y-4">
+                      {filterDefinitions.documentTypes.map((type) => (
+                        <div
+                          key={type.id}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Image
+                              src={type.icon}
+                              alt={type.label}
+                              width={16}
+                              height={16}
+                              className="flex-shrink-0"
+                            />
+                            <label
+                              htmlFor={`doc-type-${type.id}`}
+                              className="text-sm font-medium leading-none cursor-pointer text-custom-dark-green"
+                            >
+                              {type.label}
+                            </label>
+                          </div>
+                          <div className="relative">
+                            <input
+                              id={`doc-type-${type.id}`}
+                              type="checkbox"
+                              checked={activeFilters.documentTypes.includes(
+                                type.id
+                              )}
+                              onChange={() => toggleDocumentTypeFilter(type.id)}
+                              className="sr-only"
+                            />
+                            <div
+                              className={`w-4 h-4 rounded border-2 cursor-pointer transition-colors ${
+                                activeFilters.documentTypes.includes(type.id)
+                                  ? "bg-[#A3BC02] border-[#A3BC02]"
+                                  : "border-[#A3BC02] bg-white hover:border-[#A3BC02]"
+                              }`}
+                              onClick={() => toggleDocumentTypeFilter(type.id)}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sync Status Section */}
+                  <div>
+                    <h4 className="font-medium text-md text-custom-dark-green pb-2 mb-4 border-b-custom-dark-green/10 border-b-[1px]">
+                      Sync Status
+                    </h4>
+                    <div className="space-y-4">
+                      {filterDefinitions.syncStatus.map((status) => {
+                        const IconComponent = status.icon;
+                        return (
+                          <div
+                            key={status.id}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <IconComponent className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                              <label
+                                htmlFor={`status-${status.id}`}
+                                className="text-sm font-medium leading-none cursor-pointer text-custom-dark-green"
+                              >
+                                {status.label}
+                              </label>
+                            </div>
+                            <div className="relative">
+                              <input
+                                id={`status-${status.id}`}
+                                type="checkbox"
+                                checked={activeFilters.syncStatus.includes(
+                                  status.id
+                                )}
+                                onChange={() =>
+                                  toggleSyncStatusFilter(status.id)
+                                }
+                                className="sr-only"
+                              />
+                              <div
+                                className={`w-4 h-4 rounded border-2 cursor-pointer transition-colors ${
+                                  activeFilters.syncStatus.includes(
+                                    status.id
+                                  )
+                                    ? "bg-[#A3BC02] border-[#A3BC02]"
+                                    : "border-[#A3BC02] bg-white hover:border-[#A3BC02]"
+                                }`}
+                                onClick={() =>
+                                  toggleSyncStatusFilter(status.id)
+                                }
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-custom-dark-green" />
               <Input
                 placeholder="Search Google Drive..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64 h-10 rounded-full border-[#F6F6F6] bg-[#F6F6F6] font-sans"
+                className="pl-10 w-64 h-10 rounded-full bg-[#F6F6F6] font-sans border border-gray-400"
               />
             </div>
           </div>
@@ -734,10 +1038,10 @@ export default function GoogleDriveConnectionPage() {
           ) : (
             <div className="space-y-8">
               {/* Folders Section */}
-              {folders.length > 0 && (
+              {filteredFolders.length > 0 && (
                 <div>
                   <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4 mb-8">
-                    {folders.map((folder) => (
+                    {filteredFolders.map((folder) => (
                       <div
                         key={folder.id}
                         className="group cursor-pointer relative"
@@ -780,7 +1084,7 @@ export default function GoogleDriveConnectionPage() {
                 </div>
               )}
 
-              {folders.length > 0 && regularDocuments.length > 0 && (
+              {filteredFolders.length > 0 && regularDocuments.length > 0 && (
                 <hr className="h-px bg-black/20 border-0" />
               )}
 
@@ -1089,12 +1393,16 @@ export default function GoogleDriveConnectionPage() {
               )}
 
               {/* Empty State */}
-              {!isLoading && folders.length === 0 && documents.length === 0 && (
+              {!isLoading && filteredFolders.length === 0 && filteredDocuments.length === 0 && (
                 <div className="text-center py-16">
                   <div className="border-2 border-dashed border-gray-300 rounded-xl p-8">
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">No content found</h3>
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">
+                      {searchQuery.trim() ? "No matches found" : "No content found"}
+                    </h3>
                     <p className="text-sm text-gray-500 mb-4">
-                      This folder appears to be empty.
+                      {searchQuery.trim()
+                        ? `No files or folders match "${searchQuery}".`
+                        : "This folder appears to be empty."}
                     </p>
                     <Button
                       onClick={refreshContent}

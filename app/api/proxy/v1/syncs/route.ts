@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { backendApiRequest } from '@/lib/api-client';
+import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const response = await proxyApiRequest('/api/v1/syncs/', request, {
+    const response = await backendApiRequest('/api/v1/syncs/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
